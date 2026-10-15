@@ -1,0 +1,31 @@
+:root { --bg:#EEE8DD; --card:#F8F4EC; --card2:#EAE2D5; --line:#D2C7B5; --text:#1E2023; --text2:#3A3631; --muted:#6B6257; --signal:#1E5BD2; --danger:#B3261E; }
+@media (prefers-color-scheme: dark) { :root { --bg:#13161A; --card:#1C2025; --card2:#22272E; --line:#343A42; --text:#EEE8DD; --text2:#D5D7D3; --muted:#9AA0A6; --signal:#5CC8F2; --danger:#FF8C8C; } }
+* { box-sizing: border-box; }
+body { margin:0; padding:14px; background:var(--bg); color:var(--text); font:14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+header { display:flex; gap:10px; align-items:center; margin-bottom:12px; }
+.pebble { width:42px; height:42px; animation: breathe 4.5s ease-in-out infinite; transform-origin:50% 60%; }
+@keyframes breathe { 50% { transform: scale(1.05); } }
+@media (prefers-reduced-motion: reduce) { .pebble { animation:none; } }
+h1 { margin:0; font-size:20px; letter-spacing:-0.02em; }
+h2 { margin:6px 0 0; font-size:16px; }
+.muted { color:var(--muted); margin:0; font-size:12.5px; }
+.tiny { color:var(--muted); font-size:11.5px; }
+.card { background:var(--card); border-radius:20px 16px 22px 14px; padding:12px; margin-bottom:10px; box-shadow:0 2px 0 var(--card2); }
+.row { display:flex; justify-content:space-between; align-items:center; }
+.label { font:500 11px ui-monospace, monospace; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
+.guard { margin:8px 0 0; padding:8px; border-radius:10px; background:var(--text); color:var(--bg); font-size:12.5px; }
+ul { list-style:none; margin:8px 0 0; padding:0; }
+li { display:flex; gap:8px; align-items:center; padding:6px 0; border-top:1px solid var(--card2); }
+li span { flex:1; font-size:12.5px; }
+.chips { display:flex; flex-wrap:wrap; gap:6px; margin:6px 0 10px; }
+button { font:inherit; cursor:pointer; border-radius:12px; border:1.5px solid var(--line); background:transparent; color:var(--text); padding:6px 10px; }
+button.primary { background:var(--text); color:var(--bg); border-color:var(--text); font-weight:600; }
+button.link { border:none; padding:0; color:var(--signal); font-weight:600; }
+label { display:block; margin-bottom:8px; font-size:12.5px; color:var(--text2); }
+input { width:100%; margin-top:4px; padding:10px 12px; border-radius:14px; border:1.5px solid var(--line); background:var(--card); color:var(--text); font:inherit; }
+.ask { display:flex; gap:6px; }
+.ask input { margin:0; }
+.answer { margin-top:10px; white-space:pre-wrap; }
+.answer:not(:empty) { background:var(--card); border-radius:16px; padding:12px; }
+.error { color:var(--danger); font-size:12.5px; }
+footer { margin-top:18px; text-align:center; }

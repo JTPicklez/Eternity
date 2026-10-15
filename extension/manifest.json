@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "Eternity",
+  "version": "0.1.0",
+  "description": "Your Eternity family, reading along in Chrome. Ask about any page, catch due dates, and keep hidden instructions out.",
+  "action": { "default_title": "Open Eternity" },
+  "side_panel": { "default_path": "sidepanel.html" },
+  "background": { "service_worker": "background.js" },
+  "permissions": ["sidePanel", "activeTab", "scripting", "storage"],
+  "host_permissions": [
+    "https://us-central1-aibram-9c44f.cloudfunctions.net/*",
+    "https://identitytoolkit.googleapis.com/*",
+    "https://securetoken.googleapis.com/*"
+  ],
+  "icons": { "16": "icons/icon16.png", "48": "icons/icon48.png", "128": "icons/icon128.png" }
+}

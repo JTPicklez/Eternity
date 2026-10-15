@@ -1,0 +1,23 @@
+rules_version = '2';
+// Shared by Aibram and Eternity (same Firebase project). Deploying rules from
+// either repo replaces the project's rules, so keep both apps' rules here.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Aibram: each user owns their own data.
+    match /users/{userId}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Eternity: plan status, written only by the RevenueCat webhook (server).
+    // The app may read its own plan; nobody can write it from a phone.
+    match /entitlements/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if false;
+    }
+
+    // Eternity: daily message counts, server only. No chat content is ever stored.
+    match /usage/{userId} {
+      allow read, write: if false;
+    }
+  }
+}

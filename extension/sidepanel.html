@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Eternity</title>
+  <link rel="stylesheet" href="sidepanel.css" />
+</head>
+<body>
+  <header>
+    <svg class="pebble" viewBox="-6 -6 112 112" aria-hidden="true">
+      <path d="M50 4 C58 4 64 10 72 20 L90 40 C96 47 96 53 90 60 L72 80 C64 90 58 96 50 96 C42 96 36 90 28 80 L10 60 C4 53 4 47 10 40 L28 20 C36 10 42 4 50 4 Z" fill="#3E8EF0"/>
+      <ellipse cx="40" cy="47" rx="5" ry="7.5" fill="#1E2023"/><ellipse cx="60" cy="47" rx="5" ry="7.5" fill="#1E2023"/>
+    </svg>
+    <div>
+      <h1>Eternity</h1>
+      <p id="who" class="muted">Reading along</p>
+    </div>
+  </header>
+
+  <section id="signin" hidden>
+    <p>Sign in with your Eternity account.</p>
+    <form id="signin-form">
+      <label>Email <input id="email" type="email" autocomplete="email" required /></label>
+      <label>Password <input id="password" type="password" autocomplete="current-password" required /></label>
+      <button type="submit" class="primary">Sign in</button>
+      <p id="signin-error" class="error" role="alert"></p>
+    </form>
+    <p class="tiny">Your sign-in stays in this browser session only.</p>
+  </section>
+
+  <main id="app" hidden>
+    <div class="card">
+      <div class="row"><span class="label">This page</span><button id="refresh" class="link">Read again</button></div>
+      <h2 id="page-title">…</h2>
+      <p id="guard" class="guard" hidden></p>
+    </div>
+
+    <div class="card" id="dates-card" hidden>
+      <span class="label">Dates on this page</span>
+      <ul id="dates"></ul>
+    </div>
+
+    <div class="chips">
+      <button data-q="Summarize this page in 4 short bullets.">Summarize</button>
+      <button data-q="What do I actually need to do from this page?">What do I do?</button>
+      <button data-q="Explain this simply.">Explain simply</button>
+    </div>
+
+    <form id="ask-form" class="ask">
+      <input id="question" placeholder="Ask about this page" aria-label="Ask about this page" />
+      <button type="submit" class="primary" aria-label="Ask">↑</button>
+    </form>
+    <div id="answer" class="answer" aria-live="polite"></div>
+
+    <footer><button id="signout" class="link">Sign out</button></footer>
+  </main>
+  <script src="sidepanel.js"></script>
+</body>
+</html>
