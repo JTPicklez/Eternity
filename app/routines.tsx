@@ -4,7 +4,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { PLAN_LIMITS } from '@/lib/catalog';
-import { memberOrTemplate, useFamily } from '@/lib/store';
+import { memberOrTemplate, useCrew } from '@/lib/store';
 import { MemberPebble, Pebble } from '@/components/Pebble';
 import { BackHeader, Btn, Chip, Empty, Field, haptic, IconBtn, Label, PressScale, Row, Screen, Sheet, Toggle, Txt } from '@/components/ui';
 import { toast } from '@/components/Toast';
@@ -25,24 +25,24 @@ const WHENS = [
 export default function Routines() {
   const p = useTheme();
   const params = useLocalSearchParams<{ member?: string }>();
-  const routines = useFamily((s) => s.routines);
-  const members = useFamily((s) => s.members);
-  const headId = useFamily((s) => s.headId);
-  const tier = useFamily((s) => s.settings.tier);
-  const addRoutine = useFamily((s) => s.addRoutine);
-  const updateRoutine = useFamily((s) => s.updateRoutine);
-  const removeRoutine = useFamily((s) => s.removeRoutine);
+  const routines = useCrew((s) => s.routines);
+  const members = useCrew((s) => s.members);
+  const leadId = useCrew((s) => s.leadId);
+  const tier = useCrew((s) => s.settings.tier);
+  const addRoutine = useCrew((s) => s.addRoutine);
+  const updateRoutine = useCrew((s) => s.updateRoutine);
+  const removeRoutine = useCrew((s) => s.removeRoutine);
   const [open, setOpen] = useState(!!params.member);
   const [when, setWhen] = useState(WHENS[0]);
   const [then, setThen] = useState('');
-  const [who, setWho] = useState(params.member ?? headId);
+  const [who, setWho] = useState(params.member ?? leadId);
 
   const limit = PLAN_LIMITS[tier].routines;
   const active = routines.filter((r) => r.on).length;
 
   const toggle = (id: string, on: boolean) => {
     if (on && active >= limit) {
-      toast(`Free families run ${limit} routines at once.`, { label: 'See Plus', onPress: () => router.push('/plus') });
+      toast(`Free plans run ${limit} routines at once.`, { label: 'See Plus', onPress: () => router.push('/plus') });
       return;
     }
     updateRoutine(id, { on });
@@ -56,7 +56,7 @@ export default function Routines() {
       </Txt>
       <View style={{ marginTop: 14, gap: 10 }}>
         {routines.length === 0 ? (
-          <Empty title="No routines yet" body="Automate the boring parts. Your family runs them in the background." action={<Btn title="New routine" small onPress={() => setOpen(true)} />} />
+          <Empty title="No routines yet" body="Automate the boring parts. Your Crew runs them in the background." action={<Btn title="New routine" small onPress={() => setOpen(true)} />} />
         ) : (
           routines.map((r, i) => {
             const m = memberOrTemplate(r.memberId, members);
@@ -65,7 +65,7 @@ export default function Routines() {
                 <PressScale onLongPress={() => { removeRoutine(r.id); toast(`Deleted "${r.name}".`, { label: 'Undo', onPress: () => addRoutine({ ...r }) }); }} accessibilityLabel={r.name}>
                   <View style={[carved[i % 4], { padding: 14, backgroundColor: p.card, opacity: r.on ? 1 : 0.65, boxShadow: `0px 2px 0px ${p.shadow}` }]}>
                     <Row gap={12} align="flex-start">
-                      <Pebble shape={m.shape} color={m.color} mark={m.mark} face={m.face} size={36} state={r.on ? 'working' : 'idle'} animate={r.on} />
+                      <MemberPebble member={m} size={36} state={r.on ? 'working' : 'idle'} animate={r.on} />
                       <View style={{ flex: 1 }}>
                         <Txt variant="h3">{r.name}</Txt>
                         <Txt variant="small" style={{ marginTop: 4 }}>

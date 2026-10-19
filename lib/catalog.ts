@@ -1,5 +1,5 @@
 import { memberColors } from '@/theme/tokens';
-import type { Connector, Finish, Mark, Member, Motion, Shape } from './types';
+import type { Connector, Mark, Member, Motion, Shape } from './types';
 
 export interface Template {
   kind: string;
@@ -22,8 +22,8 @@ export const TEMPLATES: Template[] = [
   {
     kind: 'aibram',
     defaultName: 'Aibram',
-    role: 'Head of the family',
-    blurb: 'Steady as a tide. Sees the whole board and hands out the work.',
+    role: 'Crew lead',
+    blurb: 'Steady and calm. Sees the whole board and hands out the work.',
     color: memberColors.water,
     shape: 'diamond',
     mark: 'diamond',
@@ -31,7 +31,7 @@ export const TEMPLATES: Template[] = [
     connectors: ['calendar', 'gmail', 'maps', 'health', 'canvas', 'notion'],
     triggers: ['Every morning: the huddle', 'Sunday 6 PM: plan the week'],
     persona:
-      'You are the head of this person\'s Eternity family. You coordinate the other teammates, protect the Charter, and turn messy situations into clear plans. You are calm, warm and direct, like a steady older sibling who believes in them.',
+      'You lead this person\'s Eternity Crew. You coordinate the other teammates, protect the Charter, and turn messy situations into clear plans. You are calm, warm and direct, like a steady older sibling who believes in them.',
     personality: { tone: 55, talk: 40, push: 70 },
   },
   {
@@ -60,7 +60,7 @@ export const TEMPLATES: Template[] = [
     mark: 'brackets',
     motion: 'sharp',
     pack: 'developer',
-    connectors: ['github', 'replit', 'calendar'],
+    connectors: ['github', 'expo', 'calendar'],
     triggers: ['A build fails on main', 'A PR waits more than a day'],
     persona:
       'You are a senior code partner. You are blunt, precise and fast. You review code, explain bugs, propose fixes and keep momentum on shipping. You keep answers short and concrete.',
@@ -151,10 +151,32 @@ export const TEMPLATES: Template[] = [
 export const templateFor = (kind: string): Template =>
   TEMPLATES.find((t) => t.kind === kind) ?? TEMPLATES[0];
 
+/**
+ * Starter ideas for a teammate's job. Nobody comes with a preset specialty:
+ * the person writes the job, and these are just a place to start. Ideas that
+ * come from a template bring that template's apps and triggers along.
+ */
+export interface JobIdea {
+  label: string;
+  role: string;
+  blurb: string;
+  kind: string; // a template kind, or 'custom'
+}
+
+export const JOB_IDEAS: JobIdea[] = [
+  ...TEMPLATES.filter((t) => t.kind !== 'aibram').map((t) => ({ label: t.role, role: t.role, blurb: t.blurb, kind: t.kind })),
+  { label: 'Internship hunter', role: 'Internship hunter', blurb: 'Finds a few good internships each week, drafts the cover letters and keeps me on deadlines.', kind: 'custom' },
+  { label: 'Budget buddy', role: 'Budget buddy', blurb: 'Keeps an eye on what I spend, flags surprises and helps me hit a savings goal.', kind: 'custom' },
+  { label: 'Meal planner', role: 'Meal planner', blurb: 'Plans simple, cheap meals for the week and builds the grocery list.', kind: 'custom' },
+  { label: 'Club organizer', role: 'Club organizer', blurb: "Keeps my org's meetings, tasks and announcements on track.", kind: 'custom' },
+  { label: 'Language partner', role: 'Language partner', blurb: 'Practices conversation with me and quizzes me on new words.', kind: 'custom' },
+  { label: 'Reading plan partner', role: 'Reading plan partner', blurb: 'Keeps my reading plan going and helps me reflect on what I read.', kind: 'custom' },
+];
+
 export const PACKS = [
   { id: 'student', name: 'Student', blurb: 'Canvas, study plans, exam prep', icon: 'book-outline', color: memberColors.lilac, teammate: 'sage', connectors: ['canvas', 'notion', 'zotero', 'wolfram'] },
-  { id: 'developer', name: 'Developer', blurb: 'GitHub, Replit, builds, PRs', icon: 'code-slash-outline', color: memberColors.moss, teammate: 'bolt', connectors: ['github', 'replit', 'expo', 'sentry'] },
-  { id: 'athlete', name: 'Athlete', blurb: 'Training, recovery, Apple Health', icon: 'pulse-outline', color: memberColors.sun, teammate: 'pace', connectors: ['health', 'whoop', 'oura', 'weather'] },
+  { id: 'developer', name: 'Developer', blurb: 'GitHub, builds, crashes, PRs', icon: 'code-slash-outline', color: memberColors.moss, teammate: 'bolt', connectors: ['github', 'expo', 'sentry', 'linear'] },
+  { id: 'athlete', name: 'Athlete', blurb: 'Training, recovery, Apple Health', icon: 'pulse-outline', color: memberColors.sun, teammate: 'pace', connectors: ['health', 'whoop', 'weather'] },
   { id: 'creator', name: 'Creator', blurb: 'Podcasts, music, video, posts', icon: 'musical-notes-outline', color: memberColors.coral, teammate: 'echo', connectors: ['youtube', 'podcast', 'instagram', 'canva'] },
   { id: 'founder', name: 'Founder', blurb: 'Revenue, customers, launches', icon: 'bar-chart-outline', color: memberColors.clay, teammate: 'ledger', connectors: ['stripe', 'revenuecat', 'posthog', 'calendly'] },
   { id: 'writer', name: 'Writer', blurb: 'Drafts, research, publishing', icon: 'create-outline', color: memberColors.bone, teammate: 'quill', connectors: ['docs', 'readwise', 'ghost'] },
@@ -173,34 +195,36 @@ const caps = {
 };
 
 export const CONNECTORS: Connector[] = [
-  { id: 'calendar', name: 'Calendar', mono: 'CA', category: 'Everyone', blurb: 'Schedules, moves blocks, finds open time.', connected: true, usedBy: ['aibram', 'sage', 'bolt'], packs: [], caps: [caps.read, caps.write, caps.delete] },
+  { id: 'phone-calendar', name: 'Apple Calendar', mono: 'AC', category: 'Everyone', blurb: 'Every calendar on your iPhone, school and Google ones included. No sign-in.', connected: false, usedBy: ['aibram'], packs: [], caps: [caps.read] },
+  { id: 'calendar', name: 'Google Calendar', mono: 'CA', category: 'Everyone', blurb: 'Reads your schedule so plans fit around it.', connected: true, usedBy: ['aibram', 'sage', 'bolt'], packs: [], caps: [caps.read, caps.write, caps.delete] },
+  { id: 'messages', name: 'Messages', mono: 'MS', category: 'Everyone', blurb: 'Drafts texts and emails. Your phone opens them and you tap Send.', connected: false, usedBy: ['aibram'], packs: [], caps: [caps.draft, caps.send] },
   { id: 'gmail', name: 'Gmail', mono: 'GM', category: 'Everyone', blurb: 'Triage, drafts, follow-ups. Never sends alone.', connected: true, usedBy: ['aibram'], packs: [], caps: [caps.read, caps.draft, caps.send, caps.delete] },
   { id: 'maps', name: 'Maps', mono: 'MP', category: 'Everyone', blurb: 'Real leave-by times with live traffic.', connected: true, usedBy: ['aibram'], packs: [], caps: [caps.read] },
   { id: 'health', name: 'Apple Health', mono: 'AH', category: 'Athlete', blurb: 'Sleep, HRV, workouts. Stays on your phone.', connected: true, usedBy: ['aibram'], packs: ['athlete'], caps: [caps.read] },
   { id: 'canvas', name: 'Canvas', mono: 'CV', category: 'Student', blurb: 'Assignments, grades, due dates.', connected: true, usedBy: ['sage', 'aibram'], packs: ['student', 'campus'], caps: [caps.read] },
   { id: 'notion', name: 'Notion', mono: 'NO', category: 'Everyone', blurb: 'Notes, study plans, databases.', connected: true, usedBy: ['sage'], packs: ['student'], caps: [caps.read, caps.write, caps.delete] },
   { id: 'github', name: 'GitHub', mono: 'GH', category: 'Developer', blurb: 'Reviews PRs, explains code, opens fixes for you to approve.', connected: true, usedBy: ['bolt', 'aibram'], packs: ['developer'], caps: [caps.read, { label: 'Explain code and summarize PRs', level: 'auto' }, caps.pr, { label: 'Comment on issues as you', level: 'ask' }, caps.merge, caps.delete] },
-  { id: 'replit', name: 'Replit', mono: 'RP', category: 'Developer', blurb: 'Create, inspect and update Replit apps.', connected: false, usedBy: [], packs: ['developer'], caps: [caps.read, caps.write] },
+  { id: 'replit', name: 'Replit', mono: 'RP', category: 'Developer', blurb: 'Not available yet.', connected: false, unavailable: "Replit doesn't have a public API for your projects yet.", usedBy: [], packs: [], caps: [] },
   { id: 'expo', name: 'Expo / EAS', mono: 'EX', category: 'Developer', blurb: 'Build alerts and TestFlight feedback.', connected: false, usedBy: [], packs: ['developer'], caps: [caps.read] },
   { id: 'sentry', name: 'Sentry', mono: 'SE', category: 'Developer', blurb: 'Crash alerts with the error summarized.', connected: false, usedBy: [], packs: ['developer'], caps: [caps.read] },
   { id: 'linear', name: 'Linear', mono: 'LI', category: 'Developer', blurb: 'Ideas into tickets, sprint planning.', connected: false, usedBy: [], packs: [], caps: [caps.read, caps.write] },
-  { id: 'slack', name: 'Slack', mono: 'SL', category: 'Teams', blurb: 'Summarize channels, draft announcements.', connected: false, usedBy: [], packs: [], caps: [caps.read, caps.draft, caps.send] },
-  { id: 'discord', name: 'Discord', mono: 'DC', category: 'Teams', blurb: 'Keep up with servers and group chats.', connected: false, usedBy: [], packs: [], caps: [caps.read, caps.draft, caps.send] },
+  { id: 'slack', name: 'Slack', mono: 'SL', category: 'Teams', blurb: 'Catch up on channels, draft and post with your OK.', connected: false, usedBy: [], packs: [], caps: [caps.read, caps.draft, caps.send] },
+  { id: 'discord', name: 'Discord', mono: 'DC', category: 'Teams', blurb: 'Keep up with servers through your own bot. DMs are off limits.', connected: false, usedBy: [], packs: [], caps: [caps.read] },
   { id: 'groupme', name: 'GroupMe', mono: 'GR', category: 'Campus', blurb: 'Class and org chats, pulled into one place.', connected: false, usedBy: [], packs: ['campus'], caps: [caps.read, caps.send] },
   { id: 'campus-events', name: 'Campus events', mono: 'CE', category: 'Campus', blurb: 'Events, dining hours and org deadlines.', connected: false, usedBy: [], packs: ['campus'], caps: [caps.read] },
   { id: 'zotero', name: 'Zotero', mono: 'ZO', category: 'Student', blurb: 'Sources and citations.', connected: false, usedBy: [], packs: ['student'], caps: [caps.read, caps.write] },
   { id: 'wolfram', name: 'Wolfram Alpha', mono: 'WA', category: 'Student', blurb: 'Checks math step by step.', connected: false, usedBy: [], packs: ['student'], caps: [caps.read] },
   { id: 'weather', name: 'Weather', mono: 'WE', category: 'Everyone', blurb: 'Plans outdoor training and commutes.', connected: true, usedBy: ['aibram'], packs: ['athlete'], caps: [caps.read] },
   { id: 'whoop', name: 'WHOOP', mono: 'WH', category: 'Athlete', blurb: 'Recovery and strain.', connected: false, plusOnly: true, usedBy: [], packs: ['athlete'], caps: [caps.read] },
-  { id: 'oura', name: 'Oura', mono: 'OU', category: 'Athlete', blurb: 'Sleep and readiness.', connected: false, plusOnly: true, usedBy: [], packs: ['athlete'], caps: [caps.read] },
-  { id: 'strava', name: 'Strava', mono: 'ST', category: 'Athlete', blurb: 'Not available.', connected: false, unavailable: 'Strava does not allow its data in AI apps.', usedBy: [], packs: [], caps: [] },
-  { id: 'garmin', name: 'Garmin', mono: 'GA', category: 'Athlete', blurb: 'Coming soon.', connected: false, unavailable: 'Coming soon. Garmin is updating its developer program.', usedBy: [], packs: [], caps: [] },
+  { id: 'oura', name: 'Oura', mono: 'OU', category: 'Athlete', blurb: 'Not available.', connected: false, unavailable: "Oura doesn't allow AI use of its data. Sync it to Apple Health instead.", usedBy: [], packs: [], caps: [] },
+  { id: 'strava', name: 'Strava', mono: 'ST', category: 'Athlete', blurb: 'Not available.', connected: false, unavailable: "Strava doesn't allow its data in AI apps. Workouts synced to Apple Health still count.", usedBy: [], packs: [], caps: [] },
+  { id: 'garmin', name: 'Garmin', mono: 'GA', category: 'Athlete', blurb: 'Not available yet.', connected: false, unavailable: "Garmin's developer program is closed to new apps right now. Sync Garmin to Apple Health instead.", usedBy: [], packs: [], caps: [] },
   { id: 'youtube', name: 'YouTube', mono: 'YT', category: 'Creator', blurb: 'Titles, chapters, scheduled uploads, analytics.', connected: false, plusOnly: true, usedBy: [], packs: ['creator'], caps: [caps.read, caps.draft, caps.send] },
   { id: 'podcast', name: 'Podcast host', mono: 'PH', category: 'Creator', blurb: 'Upload episodes, write show notes. Reaches Spotify through RSS.', connected: false, plusOnly: true, usedBy: [], packs: ['creator'], caps: [caps.read, caps.send] },
   { id: 'instagram', name: 'Instagram', mono: 'IG', category: 'Creator', blurb: 'Schedule posts, read insights.', connected: false, plusOnly: true, usedBy: [], packs: ['creator'], caps: [caps.read, caps.send] },
   { id: 'canva', name: 'Canva', mono: 'CN', category: 'Creator', blurb: 'Thumbnails and graphics from templates.', connected: false, usedBy: [], packs: ['creator'], caps: [caps.write] },
   { id: 'applemusic', name: 'Apple Music', mono: 'AM', category: 'Everyone', blurb: 'Flow playlists and session music.', connected: false, usedBy: [], packs: [], caps: [caps.read] },
-  { id: 'stripe', name: 'Stripe', mono: 'SP', category: 'Founder', blurb: 'Revenue snapshots, failed payment alerts.', connected: false, plusOnly: true, usedBy: [], packs: ['founder'], caps: [caps.read, caps.pay] },
+  { id: 'stripe', name: 'Stripe', mono: 'SP', category: 'Founder', blurb: 'Revenue snapshots, failed payment alerts. Read-only.', connected: false, plusOnly: true, usedBy: [], packs: ['founder'], caps: [caps.read] },
   { id: 'revenuecat', name: 'RevenueCat', mono: 'RC', category: 'Founder', blurb: 'Subscription trends and churn.', connected: false, usedBy: [], packs: ['founder'], caps: [caps.read] },
   { id: 'posthog', name: 'PostHog', mono: 'PO', category: 'Founder', blurb: 'Weekly metrics in plain English.', connected: false, usedBy: [], packs: ['founder'], caps: [caps.read] },
   { id: 'calendly', name: 'Calendly', mono: 'CL', category: 'Founder', blurb: 'Booking without the back-and-forth.', connected: false, usedBy: [], packs: ['founder'], caps: [caps.read, caps.write] },
@@ -211,13 +235,7 @@ export const CONNECTORS: Connector[] = [
 
 export const SHAPES: Shape[] = ['diamond', 'almond', 'wedge', 'bean', 'round'];
 export const MARKS: Mark[] = ['pulse', 'book', 'brackets', 'spark', 'chart', 'pen', 'diamond'];
-export const FINISHES: { id: Finish; label: string; plus?: boolean }[] = [
-  { id: 'matte', label: 'Matte' },
-  { id: 'glow', label: 'Water glow' },
-  { id: 'stone', label: 'River stone' },
-  { id: 'glass', label: 'Sea glass' },
-  { id: 'gold', label: 'Gold leaf', plus: true },
-];
+export { FINISHES } from './cosmetics';
 export const MOTIONS: { id: Motion; label: string }[] = [
   { id: 'calm', label: 'Calm' },
   { id: 'slow', label: 'Slow' },
@@ -232,7 +250,7 @@ export const COLORS = [
   { color: memberColors.lilac, label: 'Lilac' },
   { color: memberColors.mist, label: 'Mist' },
   { color: memberColors.bone, label: 'Bone' },
-  { color: memberColors.water, label: 'Water' },
+  { color: memberColors.water, label: 'Blue' },
 ];
 
 export const DEFAULT_ACTION_LEVELS: Record<string, 'auto' | 'tell' | 'ask'> = {
@@ -243,6 +261,9 @@ export const DEFAULT_ACTION_LEVELS: Record<string, 'auto' | 'tell' | 'ask'> = {
 };
 
 export const ALWAYS_ASK = ['Sending or posting as you', 'Spending money', 'Merging code', 'Deleting anything'];
+
+/** Starting connections: preview data until the real ones are signed in. */
+export const SUGGESTED_FIRST = ['phone-calendar', 'messages', 'weather', 'maps'];
 
 export function memberFromTemplate(t: Template, seat: number, overrides: Partial<Member> = {}): Member {
   return {
@@ -257,7 +278,9 @@ export function memberFromTemplate(t: Template, seat: number, overrides: Partial
     face: 'eyes',
     mark: t.mark,
     motion: t.motion,
-    finish: 'matte',
+    finish: 'smooth',
+    mood: 'happy',
+    extras: [],
     personality: { ...t.personality },
     autonomy: 'ask',
     actionLevels: { ...DEFAULT_ACTION_LEVELS },

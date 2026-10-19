@@ -6,7 +6,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { PLAN_LIMITS } from '@/lib/catalog';
 import { errandKind, SPEND_LIMIT_DEFAULT, stepsFor } from '@/lib/errands';
 import { isoDate } from '@/lib/dates';
-import { useFamily } from '@/lib/store';
+import { useCrew } from '@/lib/store';
 import { MemberPebble } from '@/components/Pebble';
 import { BackHeader, Btn, Card, Chip, Field, Label, PressScale, Row, Screen, Txt } from '@/components/ui';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -17,15 +17,15 @@ const IDEAS = ['Two tickets for the 7:40 movie tonight under $40', 'Flight home 
 export default function NewErrand() {
   const p = useTheme();
   const params = useLocalSearchParams<{ request?: string; member?: string }>();
-  const members = useFamily((s) => s.members);
-  const headId = useFamily((s) => s.headId);
-  const tier = useFamily((s) => s.settings.tier);
-  const usage = useFamily((s) => s.usage);
-  const errands = useFamily((s) => s.errands);
-  const addErrand = useFamily((s) => s.addErrand);
-  const bumpUsage = useFamily((s) => s.bumpUsage);
+  const members = useCrew((s) => s.members);
+  const leadId = useCrew((s) => s.leadId);
+  const tier = useCrew((s) => s.settings.tier);
+  const usage = useCrew((s) => s.usage);
+  const errands = useCrew((s) => s.errands);
+  const addErrand = useCrew((s) => s.addErrand);
+  const bumpUsage = useCrew((s) => s.bumpUsage);
   const [request, setRequest] = useState(params.request ?? '');
-  const [memberId, setMemberId] = useState(params.member ?? headId);
+  const [memberId, setMemberId] = useState(params.member ?? leadId);
   const [level, setLevel] = useState<'look' | 'prepare'>('prepare');
 
   const limit = PLAN_LIMITS[tier].errands;
@@ -38,7 +38,7 @@ export default function NewErrand() {
     if (!gate.ok) return router.push('/plus');
     const kind = errandKind(request);
     const e = addErrand({ memberId, request: request.trim(), kind, level, status: 'working', steps: stepsFor(kind) });
-    useFamily.getState().setMemberState(memberId, 'working', 'Running an errand');
+    useCrew.getState().setMemberState(memberId, 'working', 'Running an errand');
     router.replace({ pathname: '/errand/[id]', params: { id: e.id } });
   };
 

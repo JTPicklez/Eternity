@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as LocalAuthentication from 'expo-local-authentication';
 import Animated, { FadeIn, FadeInDown, ZoomIn } from 'react-native-reanimated';
 import { checkCart, runErrand, SPEND_LIMIT_DEFAULT } from '@/lib/errands';
-import { memberOrTemplate, useFamily } from '@/lib/store';
+import { memberOrTemplate, useCrew } from '@/lib/store';
 import { MemberPebble } from '@/components/Pebble';
 import { BackHeader, Btn, Card, Empty, haptic, LiveDot, ProgressBar, Row, Screen, Txt } from '@/components/ui';
 import { toast } from '@/components/Toast';
@@ -16,11 +16,11 @@ const UNDO_MINUTES = 5;
 export default function ErrandScreen() {
   const p = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const errand = useFamily((s) => s.errands.find((e) => e.id === id));
-  const members = useFamily((s) => s.members);
-  const updateErrand = useFamily((s) => s.updateErrand);
-  const addReceipt = useFamily((s) => s.addReceipt);
-  const setMemberState = useFamily((s) => s.setMemberState);
+  const errand = useCrew((s) => s.errands.find((e) => e.id === id));
+  const members = useCrew((s) => s.members);
+  const updateErrand = useCrew((s) => s.updateErrand);
+  const addReceipt = useCrew((s) => s.addReceipt);
+  const setMemberState = useCrew((s) => s.setMemberState);
   const [now, setNow] = useState(Date.now());
   const [authError, setAuthError] = useState('');
 

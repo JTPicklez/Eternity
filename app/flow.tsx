@@ -1,5 +1,5 @@
 /**
- * Flow: deep work with the family on watch. Sprints, breaks, ambient water
+ * Flow: deep work with the Crew on watch. Sprints, breaks, ambient water
  * sounds, and teammates holding everything else until you surface.
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -10,7 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { setAudioModeAsync, useAudioPlayer } from 'expo-audio';
 import Svg, { Path } from 'react-native-svg';
 import Animated, { Easing, FadeIn, FadeInDown, useAnimatedStyle, useSharedValue, withRepeat, withTiming, ZoomIn } from 'react-native-reanimated';
-import { useFamily } from '@/lib/store';
+import { useCrew } from '@/lib/store';
 import { MemberPebble } from '@/components/Pebble';
 import { Btn, Chip, Field, haptic, IconBtn, Label, Row, Toggle, Txt } from '@/components/ui';
 import { toast } from '@/components/Toast';
@@ -52,13 +52,13 @@ function Water({ progress, size }: { progress: number; size: number }) {
 export default function Flow() {
   const params = useLocalSearchParams<{ task?: string; sprints?: string; minutes?: string; blockId?: string }>();
   const { width } = useWindowDimensions();
-  const members = useFamily((s) => s.members);
-  const settings = useFamily((s) => s.settings);
-  const setSettings = useFamily((s) => s.setSettings);
-  const logFlow = useFamily((s) => s.logFlow);
-  const updateBlock = useFamily((s) => s.updateBlock);
-  const addReceipt = useFamily((s) => s.addReceipt);
-  const headId = useFamily((s) => s.headId);
+  const members = useCrew((s) => s.members);
+  const settings = useCrew((s) => s.settings);
+  const setSettings = useCrew((s) => s.setSettings);
+  const logFlow = useCrew((s) => s.logFlow);
+  const updateBlock = useCrew((s) => s.updateBlock);
+  const addReceipt = useCrew((s) => s.addReceipt);
+  const leadId = useCrew((s) => s.leadId);
 
   const [task, setTask] = useState(params.task ?? '');
   const [minutes, setMinutes] = useState(Number(params.minutes) || 50);
@@ -153,7 +153,7 @@ export default function Flow() {
     logFlow({ minutes: mins, task: task || 'Deep work', sprints: sprint });
     if (params.blockId) updateBlock(params.blockId, { done: true });
     const heldCount = heldRef.current;
-    if (heldCount) addReceipt({ memberId: headId, text: `Held ${heldCount} messages while you were in Flow`, connector: 'Flow', kind: 'did', undoable: false });
+    if (heldCount) addReceipt({ memberId: leadId, text: `Held ${heldCount} messages while you were in Flow`, connector: 'Flow', kind: 'did', undoable: false });
   };
 
   const total = phase === 'break' ? BREAK : minutes * 60;
@@ -195,7 +195,7 @@ export default function Flow() {
             Everything else goes quiet.
           </Txt>
           <Txt variant="body" color={p.text2} style={{ marginTop: 10 }}>
-            Your family holds your messages, keeps the clock and tells you when to breathe.
+            Your Crew holds your messages, keeps the clock and tells you when to breathe.
           </Txt>
           <View style={{ marginTop: 20 }}>
             <Field placeholder="What are you diving into?" value={task} onChangeText={setTask} style={{ backgroundColor: p.card, borderColor: p.lineStrong, color: p.text }} />
@@ -247,7 +247,7 @@ export default function Flow() {
             </Row>
           </View>
           <Btn
-            title="Dive in"
+            title="Start"
             variant="color"
             color="#5CC8F2"
             full
@@ -335,7 +335,7 @@ export default function Flow() {
           </Txt>
           {held > 0 && (
             <Txt variant="small" color={p.muted} center style={{ marginTop: 8 }}>
-              Your family held {held} message{held === 1 ? '' : 's'}. Nothing was urgent.
+              Your Crew held {held} message{held === 1 ? '' : 's'}. Nothing was urgent.
             </Txt>
           )}
           <Row gap={10} style={{ marginTop: 24 }}>

@@ -41,13 +41,13 @@ import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { useTheme } from '@/theme/ThemeProvider';
 import { carved, fonts } from '@/theme/tokens';
-import { useFamily } from '@/lib/store';
+import { useCrew } from '@/lib/store';
 import { DROP_PATH } from './shapes';
 
 export type IconName = React.ComponentProps<typeof Ionicons>['name'];
 
 export function haptic(kind: 'light' | 'medium' | 'success' | 'warning' | 'select' = 'light') {
-  if (!useFamily.getState().settings.haptics || Platform.OS === 'web') return;
+  if (!useCrew.getState().settings.haptics || Platform.OS === 'web') return;
   const run = () => {
     switch (kind) {
       case 'medium':
@@ -104,7 +104,7 @@ export function Txt({
 // ── Background ripples ───────────────────────────────────────────────────────
 export function Ripples({ corner = 'topRight', size = 300 }: { corner?: 'topRight' | 'bottomLeft' | 'topLeft'; size?: number }) {
   const p = useTheme();
-  const ambient = useFamily((s) => s.settings.ambient);
+  const ambient = useCrew((s) => s.settings.ambient);
   const reduced = useReducedMotion();
   const drift = useSharedValue(0);
   useEffect(() => {

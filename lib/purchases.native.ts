@@ -1,18 +1,19 @@
 /**
  * RevenueCat on iOS and Android. Entitlements: "plus" and "pro".
- * Founding Families buy a product that grants "plus" for life at $4.99.
+ * Founding Crews buy a product that grants "plus" for life at $4.99.
  */
 import { Platform } from 'react-native';
 import Purchases, { type CustomerInfo, type PurchasesPackage } from 'react-native-purchases';
+import { CONFIG } from './config';
 import type { Tier } from './types';
 import { FALLBACK_PLANS, type Plan } from './purchases.shared';
 
 export { FALLBACK_PLANS, type Plan };
 
-// Create a new app for Eternity in RevenueCat and paste its public SDK keys here.
-// (Aibram's key belongs to Aibram's bundle id, so it can't be reused.)
-const IOS_KEY = '';
-const ANDROID_KEY = '';
+// Keys live in lib/config.ts. Create a new app for Eternity in RevenueCat;
+// Aibram's key belongs to Aibram's bundle id, so it can't be reused.
+const IOS_KEY = CONFIG.revenuecat.ios;
+const ANDROID_KEY = CONFIG.revenuecat.android;
 
 const apiKey = Platform.OS === 'ios' ? IOS_KEY : ANDROID_KEY;
 export const purchasesAvailable = !!apiKey;

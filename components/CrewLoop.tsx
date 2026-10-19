@@ -1,10 +1,10 @@
 /**
- * The Family loop: an infinity sign with nine seats and the head at the
+ * The Crew loop: an infinity sign with nine seats and the lead at the
  * center crossing. Members fill seats in order, nearest the center first.
  */
 import React, { useEffect } from 'react';
 import { useWindowDimensions, View } from 'react-native';
-import Svg, { Circle, Ellipse, G, Path } from 'react-native-svg';
+import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Stop } from 'react-native-svg';
 import Animated, {
   Easing,
   useAnimatedProps,
@@ -14,7 +14,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import { useFamily } from '@/lib/store';
+import { useCrew } from '@/lib/store';
 import type { Member } from '@/lib/types';
 import { useTheme } from '@/theme/ThemeProvider';
 import { deepen, MARK_PATHS } from './shapes';
@@ -61,28 +61,28 @@ export const SEAT_ORDER = ['L3', 'R0', 'L2', 'R1', 'L1', 'R2', 'L0', 'R3', 'AL']
 
 export type LoopSelection = { kind: 'member'; id: string } | { kind: 'open'; seat: number } | { kind: 'locked'; seat: number };
 
-export function FamilyLoop({
+export function CrewLoop({
   members,
-  headId,
+  leadId,
   seatLimit,
   selected,
   onSelect,
   compact,
 }: {
   members: Member[];
-  headId: string;
-  seatLimit: number; // total family size allowed (head included)
+  leadId: string;
+  seatLimit: number; // total Crew size allowed (lead included)
   selected?: LoopSelection | null;
   onSelect?: (s: LoopSelection) => void;
   compact?: boolean;
 }) {
   const p = useTheme();
-  const eyesOn = useFamily((s) => s.settings.eyes);
+  const eyesOn = useCrew((s) => s.settings.eyes);
   const reduced = useReducedMotion();
   const { width } = useWindowDimensions();
   const w = Math.min(compact ? 260 : 380, width - 32);
   const h = (w * 172) / 340;
-  const head = members.find((m) => m.id === headId);
+  const lead = members.find((m) => m.id === leadId);
 
   const ripple = useSharedValue(0);
   const pulse = useSharedValue(1);
@@ -96,7 +96,7 @@ export function FamilyLoop({
 
   const bySeat = new Map<number, Member>();
   members.forEach((m) => {
-    if (m.id !== headId && m.seat >= 0) bySeat.set(m.seat, m);
+    if (m.id !== leadId && m.seat >= 0) bySeat.set(m.seat, m);
   });
 
   const isSel = (s: LoopSelection) => {
@@ -111,11 +111,18 @@ export function FamilyLoop({
     onSelect?.(s);
   };
 
-  const headSel = selected?.kind === 'member' && selected.id === headId;
+  const leadSel = selected?.kind === 'member' && selected.id === leadId;
 
   return (
     <View style={{ alignItems: 'center' }}>
       <Svg width={w} height={h} viewBox="30 14 340 172" style={{ overflow: 'visible' }}>
+        <Defs>
+          <LinearGradient id="seatShade" x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0" stopColor="#FFFFFF" stopOpacity={0.3} />
+            <Stop offset="0.5" stopColor="#FFFFFF" stopOpacity={0} />
+            <Stop offset="1" stopColor="#000000" stopOpacity={0.22} />
+          </LinearGradient>
+        </Defs>
         <G fill="none" stroke={p.ripple} strokeWidth={1.2}>
           <Ellipse cx={200} cy={100} rx={186} ry={100} />
           <Ellipse cx={200} cy={100} rx={206} ry={114} />
@@ -141,10 +148,28 @@ export function FamilyLoop({
                 onPress={() => pick(sel)}
                 {...(m?.state === 'working' ? { animatedProps: workingProps } : {})}
               />
+              {m ? <Path d={def.d} fill="url(#seatShade)" pointerEvents="none" /> : null}
               {m && eyesOn && m.face !== 'faceless' ? (
                 <G pointerEvents="none">
-                  <Ellipse cx={def.eye[0] - 5} cy={def.eye[1]} rx={2.7} ry={m.face === 'sleepy' ? 1.6 : 4} fill={p.pebbleInk} />
-                  <Ellipse cx={def.eye[0] + 5} cy={def.eye[1]} rx={2.7} ry={m.face === 'sleepy' ? 1.6 : 4} fill={p.pebbleInk} />
+                  <Ellipse cx={def.eye[0] - 5} cy={def.eye[1] - 1} rx={2.7} ry={m.face === 'sleepy' || m.mood === 'sleepy' ? 1.6 : 4} fill={p.pebbleInk} />
+                  <Ellipse cx={def.eye[0] + 5} cy={def.eye[1] - 1} rx={2.7} ry={m.face === 'sleepy' || m.mood === 'sleepy' ? 1.6 : 4} fill={p.pebbleInk} />
+                  {m.face !== 'sleepy' && m.mood !== 'sleepy' ? (
+                    <>
+                      <Circle cx={def.eye[0] - 5.9} cy={def.eye[1] - 2.6} r={0.95} fill="#FFFFFF" />
+                      <Circle cx={def.eye[0] + 4.1} cy={def.eye[1] - 2.6} r={0.95} fill="#FFFFFF" />
+                    </>
+                  ) : null}
+                  <Path
+                    d={
+                      m.state === 'working'
+                        ? `M${def.eye[0] - 2.5} ${def.eye[1] + 6} L${def.eye[0] + 2.5} ${def.eye[1] + 6}`
+                        : `M${def.eye[0] - 3} ${def.eye[1] + 5} Q${def.eye[0]} ${def.eye[1] + 8.5} ${def.eye[0] + 3} ${def.eye[1] + 5}`
+                    }
+                    fill="none"
+                    stroke={p.pebbleInk}
+                    strokeWidth={1.4}
+                    strokeLinecap="round"
+                  />
                 </G>
               ) : null}
               {m && (!eyesOn || m.face === 'faceless') ? (
@@ -184,19 +209,23 @@ export function FamilyLoop({
             </G>
           );
         })}
-        <AnimatedCircle cx={200} cy={100} fill="none" stroke={head?.color ?? p.glow} strokeWidth={2} animatedProps={ringProps} />
+        <AnimatedCircle cx={200} cy={100} fill="none" stroke={lead?.color ?? p.glow} strokeWidth={2} animatedProps={ringProps} />
         <Path
           d="M200 76 L224 100 L200 124 L176 100 Z"
-          fill={head?.color ?? '#3E8EF0'}
-          stroke={headSel ? p.text : (head?.color ?? '#3E8EF0')}
+          fill={lead?.color ?? '#3E8EF0'}
+          stroke={leadSel ? p.text : (lead?.color ?? '#3E8EF0')}
           strokeWidth={10}
           strokeLinejoin="round"
-          onPress={() => head && pick({ kind: 'member', id: head.id })}
+          onPress={() => lead && pick({ kind: 'member', id: lead.id })}
         />
-        {eyesOn && head?.face !== 'faceless' ? (
+        <Path d="M200 76 L224 100 L200 124 L176 100 Z" fill="url(#seatShade)" pointerEvents="none" />
+        {eyesOn && lead?.face !== 'faceless' ? (
           <G pointerEvents="none">
-            <Ellipse cx={195} cy={99} rx={2.5} ry={3.8} fill={p.pebbleInk} />
-            <Ellipse cx={205} cy={99} rx={2.5} ry={3.8} fill={p.pebbleInk} />
+            <Ellipse cx={195} cy={98} rx={2.5} ry={3.8} fill={p.pebbleInk} />
+            <Ellipse cx={205} cy={98} rx={2.5} ry={3.8} fill={p.pebbleInk} />
+            <Circle cx={194.2} cy={96.5} r={0.9} fill="#FFFFFF" />
+            <Circle cx={204.2} cy={96.5} r={0.9} fill="#FFFFFF" />
+            <Path d="M197 104 Q200 107 203 104" fill="none" stroke={p.pebbleInk} strokeWidth={1.3} strokeLinecap="round" />
           </G>
         ) : (
           <Path d="M200 93 L207 100 L200 107 L193 100 Z" fill="#EEE8DD" pointerEvents="none" />

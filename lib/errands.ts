@@ -9,7 +9,7 @@
  * This build simulates the sites themselves (no real bookings happen). The
  * flow, checks and Face ID gate are the real ones the live version will use.
  */
-import { useFamily } from './store';
+import { useCrew } from './store';
 import type { Errand, ErrandStep } from './types';
 
 export function errandKind(request: string): Errand['kind'] {
@@ -131,7 +131,7 @@ export const SPEND_LIMIT_DEFAULT = 150;
 /** Walk the steps with realistic pauses, then land on the preview. */
 export function runErrand(id: string, onStep?: () => void): () => void {
   const timers: ReturnType<typeof setTimeout>[] = [];
-  const st = useFamily.getState();
+  const st = useCrew.getState();
   const e = st.errands.find((x) => x.id === id);
   if (!e) return () => {};
   const steps = e.steps.length;
@@ -139,16 +139,16 @@ export function runErrand(id: string, onStep?: () => void): () => void {
     timers.push(
       setTimeout(
         () => {
-          const cur = useFamily.getState().errands.find((x) => x.id === id);
+          const cur = useCrew.getState().errands.find((x) => x.id === id);
           if (!cur || cur.status !== 'working') return;
           const next = cur.steps.map((s, j) => ({ ...s, status: j < i ? 'done' : j === i ? 'active' : 'todo' }) as ErrandStep);
           if (i === steps) {
             const preview = previewFor(cur.kind, cur.request);
             const check = checkCart(preview, SPEND_LIMIT_DEFAULT);
-            useFamily.getState().updateErrand(id, { steps: next, status: 'preview', preview, check: { ok: check.ok, issues: check.issues } });
-            useFamily.getState().setMemberState(cur.memberId, 'waiting', 'Your errand is ready to review');
+            useCrew.getState().updateErrand(id, { steps: next, status: 'preview', preview, check: { ok: check.ok, issues: check.issues } });
+            useCrew.getState().setMemberState(cur.memberId, 'waiting', 'Your errand is ready to review');
           } else {
-            useFamily.getState().updateErrand(id, { steps: next });
+            useCrew.getState().updateErrand(id, { steps: next });
           }
           onStep?.();
         },

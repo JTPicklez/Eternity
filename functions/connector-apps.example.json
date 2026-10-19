@@ -1,0 +1,11 @@
+{
+  "_readme": "Copy this to connector-apps.json (never commit that one), fill in what you have, then run: firebase functions:secrets:set CONNECTOR_APPS --data-file functions/connector-apps.json  and redeploy. Leave out anything you haven't set up; those connectors just stay off. Remove this _readme line if you like.",
+  "google": { "clientId": "", "clientSecret": "" },
+  "github": { "clientId": "", "clientSecret": "" },
+  "notion": { "clientId": "", "clientSecret": "" },
+  "slack": { "clientId": "", "clientSecret": "" },
+  "linear": { "clientId": "", "clientSecret": "" },
+  "groupme": { "clientId": "" },
+  "wolfram": { "appId": "" },
+  "webOrigins": ["https://aibram-9c44f.web.app"]
+}

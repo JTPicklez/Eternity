@@ -4,20 +4,22 @@ import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { authErrorMessage, resetPassword, signInWithEmail, signInWithGoogleIdToken, signUpWithEmail } from '@/firebase/auth';
-import { useFamily } from '@/lib/store';
+import { useCrew } from '@/lib/store';
 import { templateFor } from '@/lib/catalog';
 import { Pebble } from '@/components/Pebble';
 import { Btn, Field, Ripples, Screen, Segmented, Spacer, Txt } from '@/components/ui';
 import { toast } from '@/components/Toast';
+import { CONFIG } from '@/lib/config';
+import { passkeysSupported, signInWithPasskey } from '@/lib/passkeys';
 import { useTheme } from '@/theme/ThemeProvider';
 
 WebBrowser.maybeCompleteAuthSession();
 
 // Same Firebase project as Aibram, so the web client is shared. Google needs a
 // separate iOS OAuth client for Eternity's bundle id (com.joshuat8808.Eternity);
-// paste it here once it's created and the Google button appears.
-const GOOGLE_WEB_CLIENT_ID = '430696585996-5bOh23vec5ps7dpve7c62q50csu21hc2.apps.googleusercontent.com';
-const GOOGLE_IOS_CLIENT_ID = '';
+// put it in lib/config.ts once it's created and the Google button appears.
+const GOOGLE_WEB_CLIENT_ID = CONFIG.google.webClientId;
+const GOOGLE_IOS_CLIENT_ID = CONFIG.google.iosClientId;
 
 function GoogleButton({ onError }: { onError: (m: string) => void }) {
   const [loading, setLoading] = useState(false);
@@ -39,7 +41,7 @@ function GoogleButton({ onError }: { onError: (m: string) => void }) {
 
 export default function Login() {
   const p = useTheme();
-  const setProfile = useFamily((s) => s.setProfile);
+  const setProfile = useCrew((s) => s.setProfile);
   const [mode, setMode] = useState<'signin' | 'signup'>('signup');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -52,7 +54,7 @@ export default function Login() {
   const submit = async () => {
     setError('');
     if (!email.trim() || !password) return setError('Email and password, please.');
-    if (mode === 'signup' && !name.trim()) return setError('What should your family call you?');
+    if (mode === 'signup' && !name.trim()) return setError('What should your Crew call you?');
     if (password.length < 6) return setError('Use at least 6 characters for your password.');
     setLoading(true);
     try {
@@ -82,7 +84,7 @@ export default function Login() {
           Eternity
         </Txt>
         <Txt variant="body" center style={{ marginTop: 10, maxWidth: 300 }}>
-          A family of AI teammates that make the work lighter, not smaller.
+          A Crew of AI teammates that make the work lighter, not smaller.
         </Txt>
       </Animated.View>
 
@@ -114,8 +116,25 @@ export default function Login() {
             {error}
           </Txt>
         ) : null}
-        <Btn title={mode === 'signup' ? 'Start my family' : 'Welcome back'} variant="signal" full loading={loading} onPress={submit} />
+        <Btn title={mode === 'signup' ? 'Start my Crew' : 'Welcome back'} variant="signal" full loading={loading} onPress={submit} />
         {googleReady && <GoogleButton onError={setError} />}
+        {mode === 'signin' && passkeysSupported() && (
+          <Btn
+            title="Sign in with a passkey"
+            variant="ghost"
+            full
+            icon="finger-print-outline"
+            onPress={async () => {
+              setError('');
+              try {
+                await signInWithPasskey();
+              } catch (e) {
+                const m = (e as Error).message;
+                if (m !== 'cancelled') setError(m);
+              }
+            }}
+          />
+        )}
         {mode === 'signin' && (
           <Btn
             title="Forgot password?"
@@ -143,7 +162,7 @@ export default function Login() {
           onPress={() => setProfile({ guest: true, firstName: name.trim().split(' ')[0] || '' })}
         />
         <Txt variant="tiny" center style={{ maxWidth: 300 }}>
-          Preview mode uses sample replies. Make an account to talk to the real family.
+          Preview mode uses sample replies. Make an account to talk to the real Crew.
         </Txt>
       </View>
     </Screen>

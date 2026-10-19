@@ -18,6 +18,37 @@ export const SHAPE_EYES: Record<Shape, [number, number, number, number]> = {
   round: [40, 46, 60, 46],
 };
 
+/**
+ * Where the face sits on each shape: [x, y, scale, rotation]. Faces are drawn
+ * in their own space (eyes at ±19, -4) and placed with this, so every shape
+ * gets the same expressions.
+ */
+export const SHAPE_FACE: Record<Shape, [number, number, number, number]> = {
+  diamond: [50, 49, 0.8, 0],
+  almond: [51, 52, 0.78, -9],
+  wedge: [51, 51, 0.82, 5],
+  bean: [52, 39, 0.74, -4],
+  round: [50, 48, 0.9, 0],
+};
+
+/** The top of the head for hats and sprouts: [x, y, rotation, width scale]. */
+export const SHAPE_TOP: Record<Shape, [number, number, number, number]> = {
+  diamond: [50, 6, 0, 0.75],
+  almond: [61, 16, 8, 0.85],
+  wedge: [56, 13, 11, 0.9],
+  bean: [55, 9, 3, 0.95],
+  round: [50, 7, 0, 1],
+};
+
+/** An upper side spot for bows, flowers and stars: [x, y, rotation]. */
+export const SHAPE_SIDE: Record<Shape, [number, number, number]> = {
+  diamond: [26, 24, -40],
+  almond: [26, 32, -45],
+  wedge: [18, 16, -30],
+  bean: [25, 17, -35],
+  round: [20, 20, -40],
+};
+
 /** Where the mark sits (center) for each shape, so it lands on the body. */
 export const SHAPE_CENTER: Record<Shape, [number, number]> = {
   diamond: [50, 50],
@@ -41,7 +72,7 @@ export const MARK_PATHS: Record<Mark, { d: string; filled?: boolean }> = {
 /** A drop of water, 24 × 24. */
 export const DROP_PATH = 'M12 2.5C12 2.5 18.5 10 18.5 14.5A6.5 6.5 0 0 1 5.5 14.5C5.5 10 12 2.5 12 2.5Z';
 
-/** The infinity loop used for the Family tab icon, 26 × 24. */
+/** The infinity loop used for the Crew tab icon, 26 × 24. */
 export const LOOP_ICON_PATH =
   'M7 5.5C3.5 5.5 1.5 8.5 1.5 12s2 6.5 5.5 6.5S11 15 13 12s3.5-6.5 6-6.5 5.5 3 5.5 6.5-2 6.5-5.5 6.5S15 15 13 12 10.5 5.5 7 5.5Z';
 
@@ -93,6 +124,21 @@ function hslToHex(h: number, s: number, l: number): string {
   const to = (x: number) => Math.round(x * 255).toString(16).padStart(2, '0');
   return `#${to(r)}${to(g)}${to(b)}`;
 }
+
+function rgbToHex([r, g, b]: [number, number, number]): string {
+  const to = (x: number) => Math.max(0, Math.min(255, Math.round(x))).toString(16).padStart(2, '0');
+  return `#${to(r)}${to(g)}${to(b)}`;
+}
+
+/** Blends two colors. t = 0 gives a, t = 1 gives b. */
+export function mix(a: string, b: string, t: number): string {
+  const A = hexToRgb(a);
+  const B = hexToRgb(b);
+  return rgbToHex([A[0] + (B[0] - A[0]) * t, A[1] + (B[1] - A[1]) * t, A[2] + (B[2] - A[2]) * t]);
+}
+
+export const lighten = (hex: string, t: number) => mix(hex, '#FFFFFF', t);
+export const darken = (hex: string, t: number) => mix(hex, '#000000', t);
 
 /** A deep version of a member color, for marks drawn on the pebble. */
 export function deepen(hex: string, lightness = 0.26): string {

@@ -1,12 +1,12 @@
 import React, { createContext, useContext, useMemo } from 'react';
 import { useColorScheme } from 'react-native';
-import { useFamily } from '@/lib/store';
+import { useCrew } from '@/lib/store';
 import { ink, paper, type Palette } from './tokens';
 
 const ThemeContext = createContext<Palette>(paper);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const pref = useFamily((s) => s.settings.theme);
+  const pref = useCrew((s) => s.settings.theme);
   const system = useColorScheme();
   const palette = useMemo(() => {
     if (pref === 'paper') return paper;

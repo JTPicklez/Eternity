@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Animated, { BounceIn, FadeInDown, ZoomIn } from 'react-native-reanimated';
 import { askTeammate } from '@/lib/ai';
 import { addDays, isoDate, weekOfYear } from '@/lib/dates';
-import { useFamily, useHead } from '@/lib/store';
+import { useCrew, useLead } from '@/lib/store';
 import { MemberPebble } from '@/components/Pebble';
 import { RichText } from '@/components/RichText';
 import { ThinkingDots } from '@/components/Thinking';
@@ -28,14 +28,14 @@ function gradeFor(score: number) {
 
 export default function Review() {
   const p = useTheme();
-  const head = useHead();
-  const blocks = useFamily((s) => s.blocks);
-  const receipts = useFamily((s) => s.receipts);
-  const flowSessions = useFamily((s) => s.flowSessions);
-  const weeks = useFamily((s) => s.weeks);
-  const goals = useFamily((s) => s.charter.goals);
-  const reviews = useFamily((s) => s.reviews);
-  const saveReview = useFamily((s) => s.saveReview);
+  const lead = useLead();
+  const blocks = useCrew((s) => s.blocks);
+  const receipts = useCrew((s) => s.receipts);
+  const flowSessions = useCrew((s) => s.flowSessions);
+  const weeks = useCrew((s) => s.weeks);
+  const goals = useCrew((s) => s.charter.goals);
+  const reviews = useCrew((s) => s.reviews);
+  const saveReview = useCrew((s) => s.saveReview);
   const week = weekOfYear();
   const saved = reviews.find((r) => r.week === week);
   const [decision, setDecision] = useState<string | null>(saved?.decision ?? null);
@@ -70,11 +70,11 @@ export default function Review() {
   const getFull = async () => {
     setThinking(true);
     const res = await askTeammate({
-      member: head,
+      member: lead,
       history: [],
       task: 'review',
       deep: true,
-      text: `Write my weekly review. Week ${week}. Blocks finished: ${stats.done}/${stats.past}. Flow minutes: ${stats.flowMin}. Hours toward goals: ${goals.map((g, i) => `${g}: ${stats.goalHours[i]}h`).join('; ') || 'none set'}. Family actions: ${stats.actions}. Grade it honestly against my Charter, name the one win, the one thing that slipped, and the one decision for next week. Keep it tight and encouraging without sugarcoating.`,
+      text: `Write my weekly review. Week ${week}. Blocks finished: ${stats.done}/${stats.past}. Flow minutes: ${stats.flowMin}. Hours toward goals: ${goals.map((g, i) => `${g}: ${stats.goalHours[i]}h`).join('; ') || 'none set'}. Crew actions: ${stats.actions}. Grade it honestly against my Charter, name the one win, the one thing that slipped, and the one decision for next week. Keep it tight and encouraging without sugarcoating.`,
     });
     setAi(res.text);
     setThinking(false);
@@ -86,7 +86,7 @@ export default function Review() {
 
       <Animated.View entering={FadeInDown}>
         <Card tone="stone" carve={0} style={{ marginTop: 8, alignItems: 'center' }} padding={22}>
-          <MemberPebble member={head} size={54} state="done" />
+          <MemberPebble member={lead} size={54} state="done" />
           <Txt variant="label" color={p.onStoneMuted} style={{ marginTop: 12 }}>
             Graded on your Charter
           </Txt>
@@ -161,7 +161,7 @@ export default function Review() {
               setDecision(o.title);
               saveReview({ week, grade: stats.grade, decision: o.title });
               haptic('success');
-              toast(`${head.name} will set it up for next week.`, undefined, head.color);
+              toast(`${lead.name} will set it up for next week.`, undefined, lead.color);
             }}
             accessibilityLabel={o.title}
           >
@@ -187,13 +187,13 @@ export default function Review() {
       <Card tone="soft" carve={3} style={{ marginTop: 12 }}>
         <Row gap={10}>
           <Txt variant="h3" style={{ flex: 1 }}>
-            {head.name}'s full review
+            {lead.name}'s full review
           </Txt>
           {!ai && !thinking && <Btn title="Write it" small onPress={getFull} />}
         </Row>
         {thinking ? (
           <View style={{ marginTop: 10 }}>
-            <ThinkingDots color={head.color} />
+            <ThinkingDots color={lead.color} />
           </View>
         ) : ai ? (
           <View style={{ marginTop: 8 }}>

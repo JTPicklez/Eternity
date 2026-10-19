@@ -7,29 +7,29 @@ import { useShallow } from 'zustand/react/shallow';
 import { auth } from '@/firebase/config';
 import { logOut } from '@/firebase/auth';
 import { pushWords } from '@/lib/catalog';
-import { useFamily, useHead } from '@/lib/store';
+import { useCrew, useLead } from '@/lib/store';
 import { MemberPebble } from '@/components/Pebble';
 import { Badge, Btn, Card, IconBtn, Label, ListRow, Row, Screen, Txt } from '@/components/ui';
 import { toast } from '@/components/Toast';
 import { useTheme } from '@/theme/ThemeProvider';
 
-const TIER_NAME = { free: 'Free', plus: 'Eternity Plus', pro: 'Eternity Pro', founding: 'Founding Family' } as const;
+const TIER_NAME = { free: 'Free', plus: 'Eternity Plus', pro: 'Eternity Pro', founding: 'Founding Crew' } as const;
 
 export default function Me() {
   const p = useTheme();
-  const head = useHead();
-  const firstName = useFamily((s) => s.firstName);
-  const guest = useFamily((s) => s.guest);
-  const charter = useFamily((s) => s.charter);
-  const tier = useFamily((s) => s.settings.tier);
-  const settings = useFamily((s) => s.settings);
-  const counts = useFamily(
+  const lead = useLead();
+  const firstName = useCrew((s) => s.firstName);
+  const guest = useCrew((s) => s.guest);
+  const charter = useCrew((s) => s.charter);
+  const tier = useCrew((s) => s.settings.tier);
+  const settings = useCrew((s) => s.settings);
+  const counts = useCrew(
     useShallow((s) => ({ facts: s.facts.length, routines: s.routines.filter((r) => r.on).length, receipts: s.receipts.length, connected: s.connected.length })),
   );
-  const sample = useFamily((s) => s.sample);
-  const loadSample = useFamily((s) => s.loadSample);
-  const clearSample = useFamily((s) => s.clearSample);
-  const setProfile = useFamily((s) => s.setProfile);
+  const sample = useCrew((s) => s.sample);
+  const loadSample = useCrew((s) => s.loadSample);
+  const clearSample = useCrew((s) => s.clearSample);
+  const setProfile = useCrew((s) => s.setProfile);
   const email = auth.currentUser?.email;
 
   return (
@@ -64,7 +64,7 @@ export default function Me() {
       <Label>Your Charter</Label>
       <Card carve={1} onPress={() => router.push('/charter')} accessibilityLabel="Edit your Charter">
         <Row gap={12} align="flex-start">
-          <MemberPebble member={head} size={40} animate={false} />
+          <MemberPebble member={lead} size={40} animate={false} />
           <View style={{ flex: 1 }}>
             {charter.goals.length ? (
               charter.goals.map((g, i) => (
@@ -88,11 +88,12 @@ export default function Me() {
         </Row>
       </Card>
 
-      <Label>Your family's access</Label>
+      <Label>Your Crew's access</Label>
       <Card carve={2} padding={6}>
         <ListRow icon="link-outline" title="Connections" sub={`${counts.connected} connected`} onPress={() => router.push('/connect')} />
+        <ListRow icon="chatbubble-ellipses-outline" title="Messages" sub="Drafts you send yourself" onPress={() => router.push('/messages')} />
         <ListRow icon="repeat-outline" title="Routines" sub={`${counts.routines} running`} onPress={() => router.push('/routines')} />
-        <ListRow icon="receipt-outline" title="Receipts" sub="Everything your family read or did" onPress={() => router.push('/receipts')} />
+        <ListRow icon="receipt-outline" title="Receipts" sub="Everything your Crew read or did" onPress={() => router.push('/receipts')} />
         <ListRow icon="bookmark-outline" title="Memory" sub={`${counts.facts} things remembered · learning ${settings.learning ? 'on' : 'off'}`} onPress={() => router.push('/memory')} />
         <ListRow icon="shield-checkmark-outline" title="Trust & privacy" sub="What we promise, and how to check" onPress={() => router.push('/trust')} />
       </Card>
@@ -100,8 +101,9 @@ export default function Me() {
       <Label>Progress</Label>
       <Card carve={3} padding={6}>
         <ListRow icon="ribbon-outline" title="Weekly review" sub="Your grade, your wins, one decision" onPress={() => router.push('/review')} />
-        <ListRow icon="ellipse-outline" title="Your year" sub="Every week as water rings" onPress={() => router.push('/rings')} />
+        <ListRow icon="ellipse-outline" title="Your year" sub="Every week as a ring of progress" onPress={() => router.push('/rings')} />
         <ListRow icon="albums-outline" title="Flashcards" onPress={() => router.push('/flashcards')} />
+        <ListRow icon="construct-outline" title="Artifacts" sub="Little apps and charts your Crew built" onPress={() => router.push('/artifacts')} />
         <ListRow icon="bag-handle-outline" title="Errands" sub="Look, prepare, you tap" onPress={() => router.push('/errand/new')} />
       </Card>
 
@@ -131,7 +133,7 @@ export default function Me() {
             full
             onPress={async () => {
               await logOut();
-              toast('Signed out. Your family stays encrypted on this phone.');
+              toast('Signed out. Your Crew stays encrypted on this phone.');
             }}
           />
         )}

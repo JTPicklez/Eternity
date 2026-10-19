@@ -3,9 +3,9 @@ import { View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { shortTime } from '@/lib/dates';
-import { memberOrTemplate, useFamily } from '@/lib/store';
+import { memberOrTemplate, useCrew } from '@/lib/store';
 import type { Receipt } from '@/lib/types';
-import { Pebble } from '@/components/Pebble';
+import { MemberPebble } from '@/components/Pebble';
 import { BackHeader, Btn, Empty, Label, Row, Screen, Segmented, Txt } from '@/components/ui';
 import { toast } from '@/components/Toast';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -22,9 +22,9 @@ function dayKey(at: number) {
 
 export default function Receipts() {
   const p = useTheme();
-  const receipts = useFamily((s) => s.receipts);
-  const members = useFamily((s) => s.members);
-  const undoReceipt = useFamily((s) => s.undoReceipt);
+  const receipts = useCrew((s) => s.receipts);
+  const members = useCrew((s) => s.members);
+  const undoReceipt = useCrew((s) => s.undoReceipt);
   const [filter, setFilter] = useState<'all' | 'did' | 'read'>('all');
 
   const groups = useMemo(() => {
@@ -41,7 +41,7 @@ export default function Receipts() {
     <Screen>
       <BackHeader kicker="Nothing happens silently" title="Receipts" />
       <Txt variant="body" style={{ marginTop: 4, marginBottom: 12 }}>
-        Everything your family read or did, in order. Undo anything that can be undone.
+        Everything your Crew read or did, in order. Undo anything that can be undone.
       </Txt>
       <Segmented
         options={[
@@ -64,7 +64,7 @@ export default function Receipts() {
                 <Animated.View key={r.id} entering={FadeInDown.delay(Math.min(i, 8) * 30)}>
                   <View style={[carved[i % 4], { marginBottom: 8, padding: 12, backgroundColor: p.card, opacity: r.undone ? 0.55 : 1, boxShadow: `0px 2px 0px ${p.shadow}` }]}>
                     <Row gap={10} align="flex-start">
-                      <Pebble shape={m.shape} color={m.color} mark={m.mark} face={m.face} size={30} animate={false} />
+                      <MemberPebble member={m} size={30} animate={false} />
                       <View style={{ flex: 1 }}>
                         <Txt variant="body" style={{ textDecorationLine: r.undone ? 'line-through' : 'none' }}>
                           {r.text}

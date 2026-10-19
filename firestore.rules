@@ -19,5 +19,22 @@ service cloud.firestore {
     match /usage/{userId} {
       allow read, write: if false;
     }
+
+    // Eternity connectors: encrypted tokens and sign-in states. Server only.
+    // The app never reads tokens; it only ever sees results from the functions.
+    match /connectorTokens/{id} {
+      allow read, write: if false;
+    }
+    match /connectorStates/{id} {
+      allow read, write: if false;
+    }
+
+    // Eternity passkeys (website sign-in): public keys and one-time challenges. Server only.
+    match /passkeys/{id} {
+      allow read, write: if false;
+    }
+    match /passkeyChallenges/{id} {
+      allow read, write: if false;
+    }
   }
 }

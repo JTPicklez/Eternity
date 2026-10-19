@@ -1,10 +1,11 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { CONNECTORS, PACKS } from '@/lib/catalog';
-import { useFamily } from '@/lib/store';
+import { isLocal, refreshConnectors } from '@/lib/connectors';
+import { useCrew } from '@/lib/store';
 import { BackHeader, Badge, Chip, Field, haptic, Label, Mono, PressScale, Row, Screen, Txt } from '@/components/ui';
 import { toast } from '@/components/Toast';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -14,11 +15,16 @@ const CATEGORIES = ['All', 'Everyone', 'Student', 'Developer', 'Athlete', 'Creat
 
 export default function Connect() {
   const p = useTheme();
-  const connected = useFamily((s) => s.connected);
-  const toggle = useFamily((s) => s.toggleConnector);
-  const packs = useFamily((s) => s.charter.packs);
-  const setCharter = useFamily((s) => s.setCharter);
-  const tier = useFamily((s) => s.settings.tier);
+  const connected = useCrew((s) => s.connected);
+  const live = useCrew((s) => s.live);
+  const guest = useCrew((s) => s.guest);
+  useEffect(() => {
+    if (!guest) refreshConnectors();
+  }, [guest]);
+  const toggle = useCrew((s) => s.toggleConnector);
+  const packs = useCrew((s) => s.charter.packs);
+  const setCharter = useCrew((s) => s.setCharter);
+  const tier = useCrew((s) => s.settings.tier);
   const [cat, setCat] = useState('All');
   const [q, setQ] = useState('');
 
@@ -32,7 +38,7 @@ export default function Connect() {
     <Screen>
       <BackHeader kicker={`${connected.length} connected`} title="Connections" />
       <Txt variant="body" style={{ marginTop: 4 }}>
-        Every connection shows exactly what your family can read and do. Tap one to set its limits.
+        Every connection shows exactly what your Crew can read and do. Tap one to set its limits.
       </Txt>
 
       <Label>Packs</Label>
@@ -50,7 +56,7 @@ export default function Connect() {
                 setCharter({ packs: [...packs, pk.id] });
                 pk.connectors.forEach((c) => {
                   const def = CONNECTORS.find((x) => x.id === c);
-                  if (def && !def.unavailable && !(def.plusOnly && tier === 'free') && !useFamily.getState().connected.includes(c)) toggle(c);
+                  if (def && !def.unavailable && !(def.plusOnly && tier === 'free') && !useCrew.getState().connected.includes(c)) toggle(c);
                 });
                 haptic('success');
                 toast(`${pk.name} pack added.`);
@@ -84,6 +90,7 @@ export default function Connect() {
       <View style={{ gap: 8 }}>
         {list.map((c, i) => {
           const on = connected.includes(c.id);
+          const isLive = !!live[c.id] || (on && isLocal(c.id));
           return (
             <Animated.View key={c.id} entering={FadeInDown.delay(Math.min(i, 10) * 30)}>
               <PressScale onPress={() => router.push({ pathname: '/connector/[id]', params: { id: c.id } })} accessibilityLabel={`${c.name}${on ? ', connected' : ''}`}>
@@ -94,6 +101,7 @@ export default function Connect() {
                       <Row gap={6}>
                         <Txt variant="bodyStrong">{c.name}</Txt>
                         {c.plusOnly && <Badge text="Plus" color={p.card2} textColor={p.text} />}
+                        {isLive ? <Badge text="Live" color={p.success} textColor="#FFFFFF" /> : on ? <Badge text="Sample" color={p.card2} textColor={p.muted} /> : null}
                       </Row>
                       <Txt variant="small" numberOfLines={2}>
                         {c.unavailable ?? c.blurb}
@@ -108,7 +116,7 @@ export default function Connect() {
         })}
       </View>
       <Txt variant="tiny" center style={{ marginTop: 16 }}>
-        Preview build: connections use sample data while live integrations are finished.
+        Live means your real data. Sample means it's on with practice data until you sign in.
       </Txt>
     </Screen>
   );

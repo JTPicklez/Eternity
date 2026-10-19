@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import Animated, { FadeInDown, FadeOut, LinearTransition } from 'react-native-reanimated';
 import { timeAgo } from '@/lib/dates';
-import { useFamily } from '@/lib/store';
+import { useCrew } from '@/lib/store';
 import { BackHeader, Badge, Btn, Card, Empty, Field, haptic, IconBtn, Label, Row, Screen, Sheet, Toggle, Txt } from '@/components/ui';
 import { toast } from '@/components/Toast';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -11,12 +12,12 @@ import { carved } from '@/theme/tokens';
 
 export default function Memory() {
   const p = useTheme();
-  const facts = useFamily((s) => s.facts);
-  const learning = useFamily((s) => s.settings.learning);
-  const setSettings = useFamily((s) => s.setSettings);
-  const addFact = useFamily((s) => s.addFact);
-  const removeFact = useFamily((s) => s.removeFact);
-  const clearFacts = useFamily((s) => s.clearFacts);
+  const facts = useCrew((s) => s.facts);
+  const learning = useCrew((s) => s.settings.learning);
+  const setSettings = useCrew((s) => s.setSettings);
+  const addFact = useCrew((s) => s.addFact);
+  const removeFact = useCrew((s) => s.removeFact);
+  const clearFacts = useCrew((s) => s.clearFacts);
   const [text, setText] = useState('');
   const [confirm, setConfirm] = useState(false);
 
@@ -24,7 +25,7 @@ export default function Memory() {
     <Screen>
       <BackHeader kicker="Encrypted on this phone" title="Memory" />
       <Txt variant="body" style={{ marginTop: 4 }}>
-        What your family knows about you. Forgetting here really forgets: it's deleted, not hidden.
+        What your Crew knows about you. Forgetting here really forgets: it's deleted, not hidden.
       </Txt>
 
       <Card carve={0} style={{ marginTop: 14 }}>
@@ -34,6 +35,21 @@ export default function Memory() {
             <Txt variant="small">{learning ? 'Teammates save useful facts on their own and tell you each time.' : 'Off. Teammates suggest facts and you decide what to save.'}</Txt>
           </View>
           <Toggle value={learning} onChange={(v) => { setSettings({ learning: v }); toast(v ? 'Learning is on. You will see every save.' : 'Learning is off.'); }} label="Learn from chats" />
+        </Row>
+      </Card>
+
+      <Card tone="stone" carve={2} style={{ marginTop: 14 }} onPress={() => router.push('/memory-import')} accessibilityLabel="Bring memory from another AI">
+        <Row gap={12}>
+          <Ionicons name="download-outline" size={22} color={p.onStone} />
+          <View style={{ flex: 1 }}>
+            <Txt variant="bodyStrong" color={p.onStone}>
+              Bring memory from another AI
+            </Txt>
+            <Txt variant="small" color={p.onStoneMuted}>
+              Copy one prompt into ChatGPT, Gemini or any assistant, paste what it says back, and pick what to keep.
+            </Txt>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={p.onStoneMuted} />
         </Row>
       </Card>
 
@@ -47,18 +63,22 @@ export default function Memory() {
 
       <Label>{facts.length} things remembered</Label>
       {facts.length === 0 ? (
-        <Empty title="Nothing remembered" body="Your family starts fresh every time until you save something." />
+        <Empty title="Nothing remembered" body="Your Crew starts fresh every time until you save something." />
       ) : (
         <Animated.View layout={LinearTransition}>
           {facts.map((f, i) => (
             <Animated.View key={f.id} entering={FadeInDown.delay(Math.min(i, 8) * 30)} exiting={FadeOut} layout={LinearTransition}>
               <View style={[carved[i % 4], { marginBottom: 8, padding: 12, backgroundColor: p.card, boxShadow: `0px 2px 0px ${p.shadow}` }]}>
                 <Row gap={10}>
-                  <Ionicons name={f.source === 'you' ? 'person-outline' : 'sparkles-outline'} size={16} color={p.muted} />
+                  <Ionicons name={f.source === 'you' ? 'person-outline' : f.source === 'imported' ? 'download-outline' : 'sparkles-outline'} size={16} color={p.muted} />
                   <View style={{ flex: 1 }}>
                     <Txt variant="body">{f.text}</Txt>
                     <Row gap={6} style={{ marginTop: 4 }}>
-                      <Badge text={f.source === 'you' ? 'You told us' : 'Learned'} color={p.card2} textColor={p.muted} />
+                      <Badge
+                        text={f.source === 'you' ? 'You told us' : f.source === 'imported' ? `From ${f.from ?? 'another AI'}` : 'Learned'}
+                        color={p.card2}
+                        textColor={p.muted}
+                      />
                       <Txt variant="tiny">{timeAgo(f.at)}</Txt>
                     </Row>
                   </View>

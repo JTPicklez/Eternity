@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View } from 'react-native';
 import { router } from 'expo-router';
 import Animated, { FadeIn, ZoomIn } from 'react-native-reanimated';
-import { useFamily } from '@/lib/store';
+import { useCrew } from '@/lib/store';
 import { pushWords } from '@/lib/catalog';
 import type { Autonomy } from '@/lib/types';
 import { Btn, Card, Chip, Field, Label, Row, Screen, Segmented, StoneSlider, Toggle, Txt } from '@/components/ui';
@@ -15,9 +15,9 @@ const RULE_IDEAS = ['Sleep at least 7 hours', 'Sunday dinner with family', 'Gym 
 
 export default function CharterScreen() {
   const p = useTheme();
-  const charter = useFamily((s) => s.charter);
-  const setCharter = useFamily((s) => s.setCharter);
-  const firstName = useFamily((s) => s.firstName);
+  const charter = useCrew((s) => s.charter);
+  const setCharter = useCrew((s) => s.setCharter);
+  const firstName = useCrew((s) => s.firstName);
   const [rules, setRules] = useState<string[]>(charter.nonNegotiables);
   const [custom, setCustom] = useState('');
   const [push, setPush] = useState(charter.push);
@@ -34,7 +34,7 @@ export default function CharterScreen() {
         The Charter
       </Txt>
       <Txt variant="title" style={{ marginTop: 6 }}>
-        The rules your family plays by.
+        The rules your Crew plays by.
       </Txt>
       <Txt variant="body" style={{ marginTop: 8 }}>
         Every teammate reads this before they act. Change it anytime from Me.
@@ -82,7 +82,7 @@ export default function CharterScreen() {
           {pushWords(push)}
         </Txt>
         <Txt variant="small" style={{ marginTop: 4 }}>
-          Your family will never tell you to stop chasing. They make the load lighter.
+          Your Crew will never tell you to stop chasing. They make the load lighter.
         </Txt>
       </Card>
 
@@ -137,7 +137,7 @@ export default function CharterScreen() {
         {signed ? (
           <Animated.View entering={ZoomIn.springify()}>
             <Txt variant="small" color={p.onStoneMuted} style={{ marginTop: 6 }}>
-              Your family has it. Let's set up their access.
+              Your Crew has it. Let's set up their access.
             </Txt>
           </Animated.View>
         ) : (

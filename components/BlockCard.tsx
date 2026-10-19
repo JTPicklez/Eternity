@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, LinearTransition } from 'react-native-reanimated';
 import { clock } from '@/lib/dates';
-import { memberOrTemplate, useFamily } from '@/lib/store';
+import { memberOrTemplate, useCrew } from '@/lib/store';
 import type { Block, BlockKind } from '@/lib/types';
 import { useTheme } from '@/theme/ThemeProvider';
 import { carved } from '@/theme/tokens';
@@ -39,7 +39,7 @@ export function BlockCard({
   showTime?: boolean;
 }) {
   const p = useTheme();
-  const members = useFamily((s) => s.members);
+  const members = useCrew((s) => s.members);
   const by = block.by ? memberOrTemplate(block.by, members) : null;
   const isFlow = block.kind === 'flow';
   const sub = [block.sub, block.end && !block.sub?.includes('until') ? `until ${clock(block.end)}` : null, by ? `placed by ${by.name}` : null]

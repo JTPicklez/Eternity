@@ -3,16 +3,16 @@ import { View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { timeAgo } from '@/lib/dates';
-import { memberOrTemplate, useFamily } from '@/lib/store';
-import { Pebble } from '@/components/Pebble';
+import { memberOrTemplate, useCrew } from '@/lib/store';
+import { MemberPebble } from '@/components/Pebble';
 import { BackHeader, Card, Empty, Label, Row, Screen, Txt } from '@/components/ui';
 import { useTheme } from '@/theme/ThemeProvider';
 import { carved } from '@/theme/tokens';
 
 export default function Guard() {
   const p = useTheme();
-  const guard = useFamily((s) => s.guard);
-  const members = useFamily((s) => s.members);
+  const guard = useCrew((s) => s.guard);
+  const members = useCrew((s) => s.members);
 
   return (
     <Screen>
@@ -31,7 +31,7 @@ export default function Guard() {
 
       <Label>What it caught</Label>
       {guard.length === 0 ? (
-        <Empty title="All quiet" body="Nothing suspicious on the pages your family has read." />
+        <Empty title="All quiet" body="Nothing suspicious on the pages your Crew has read." />
       ) : (
         guard.map((g, i) => {
           const m = memberOrTemplate(g.memberId, members);
@@ -39,7 +39,7 @@ export default function Guard() {
             <Animated.View key={g.id} entering={FadeInDown.delay(i * 50)}>
               <View style={[carved[i % 4], { marginBottom: 10, padding: 14, backgroundColor: p.card, boxShadow: `0px 2px 0px ${p.shadow}` }]}>
                 <Row gap={10}>
-                  <Pebble shape={m.shape} color={m.color} mark={m.mark} size={30} animate={false} />
+                  <MemberPebble member={m} size={30} animate={false} />
                   <View style={{ flex: 1 }}>
                     <Txt variant="bodyStrong">{g.site}</Txt>
                     <Txt variant="tiny">

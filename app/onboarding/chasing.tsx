@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, LinearTransition } from 'react-native-reanimated';
 import { PACKS } from '@/lib/catalog';
-import { useFamily } from '@/lib/store';
+import { useCrew } from '@/lib/store';
 import { Btn, Chip, Field, PressScale, Row, Screen, Txt } from '@/components/ui';
 import { Steps } from '@/components/Steps';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -22,8 +22,8 @@ const GOAL_IDEAS = [
 
 export default function Chasing() {
   const p = useTheme();
-  const charter = useFamily((s) => s.charter);
-  const setCharter = useFamily((s) => s.setCharter);
+  const charter = useCrew((s) => s.charter);
+  const setCharter = useCrew((s) => s.setCharter);
   const [packs, setPacks] = useState<string[]>(charter.packs);
   const [goals, setGoals] = useState<string[]>(charter.goals);
   const [custom, setCustom] = useState('');
@@ -98,7 +98,7 @@ export default function Chasing() {
         Your big goals
       </Txt>
       <Txt variant="small" style={{ marginTop: 4 }}>
-        Up to three. Your family measures everything against these.
+        Up to three. Your Crew measures everything against these.
       </Txt>
       <Animated.View layout={LinearTransition.springify()} style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
         {[...new Set([...goals, ...GOAL_IDEAS])].map((g) => (

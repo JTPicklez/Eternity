@@ -6,7 +6,7 @@ import Animated, { FadeInDown, LinearTransition } from 'react-native-reanimated'
 import { askTeammate } from '@/lib/ai';
 import { addDays, clockAmPm, isoDate, minutesOf, pad } from '@/lib/dates';
 import { findCollisions, weekdayName, type Collision } from '@/lib/huddle';
-import { useFamily, useHead } from '@/lib/store';
+import { useCrew, useLead } from '@/lib/store';
 import type { Block, BlockKind } from '@/lib/types';
 import { BlockCard, KIND_ICON } from '@/components/BlockCard';
 import { RichText } from '@/components/RichText';
@@ -36,15 +36,15 @@ function plansFor(c: Collision) {
       id: 'A',
       title: `${c.b.title} right after`,
       desc: `${c.a.title} stays at ${clockAmPm(c.a.time)}. ${c.b.title} moves to ${clockAmPm(toTime(later))}–${clockAmPm(toTime(later + bDur))}.`,
-      apply: () => useFamily.getState().updateBlock(c.b.id, { time: toTime(later), end: toTime(later + bDur) }),
-      undo: () => useFamily.getState().updateBlock(c.b.id, { time: c.b.time, end: c.b.end }),
+      apply: () => useCrew.getState().updateBlock(c.b.id, { time: toTime(later), end: toTime(later + bDur) }),
+      undo: () => useCrew.getState().updateBlock(c.b.id, { time: c.b.time, end: c.b.end }),
     },
     {
       id: 'B',
       title: `${c.a.title} earlier`,
       desc: `${c.a.title} moves to ${clockAmPm(toTime(earlier))}–${clockAmPm(toTime(earlier + aDur))}. ${c.b.title} keeps ${clockAmPm(c.b.time)}.`,
-      apply: () => useFamily.getState().updateBlock(c.a.id, { time: toTime(earlier), end: toTime(earlier + aDur) }),
-      undo: () => useFamily.getState().updateBlock(c.a.id, { time: c.a.time, end: c.a.end }),
+      apply: () => useCrew.getState().updateBlock(c.a.id, { time: toTime(earlier), end: toTime(earlier + aDur) }),
+      undo: () => useCrew.getState().updateBlock(c.a.id, { time: c.a.time, end: c.a.end }),
     },
   ];
 }
@@ -54,13 +54,13 @@ type Bucket = 'Must' | 'Should' | 'Could';
 export default function Planner() {
   const p = useTheme();
   const { fix } = useLocalSearchParams<{ fix?: string }>();
-  const head = useHead();
-  const blocks = useFamily((s) => s.blocks);
-  const goals = useFamily((s) => s.charter.goals);
-  const addBlock = useFamily((s) => s.addBlock);
-  const updateBlock = useFamily((s) => s.updateBlock);
-  const removeBlock = useFamily((s) => s.removeBlock);
-  const addReceipt = useFamily((s) => s.addReceipt);
+  const lead = useLead();
+  const blocks = useCrew((s) => s.blocks);
+  const goals = useCrew((s) => s.charter.goals);
+  const addBlock = useCrew((s) => s.addBlock);
+  const updateBlock = useCrew((s) => s.updateBlock);
+  const removeBlock = useCrew((s) => s.removeBlock);
+  const addReceipt = useCrew((s) => s.addReceipt);
   const start = useMemo(() => new Date(), []);
   const days = useMemo(() => Array.from({ length: 7 }, (_, i) => isoDate(addDays(start, i))), [start]);
   const collisions = useMemo(() => findCollisions(blocks, start), [blocks, start]);
@@ -93,11 +93,11 @@ export default function Planner() {
     setThinking(true);
     const summary = weekBlocks.map((b) => `${b.date} ${clockAmPm(b.time)} ${b.title} (${b.kind})`).join('\n');
     const res = await askTeammate({
-      member: head,
+      member: lead,
       history: [],
       task: 'plan',
       deep: true,
-      text: `I'm slammed. Triage my week against my Charter goals. Keep me moving toward the goals; make it lighter, not smaller. Say what to protect, what to shrink, what to move and what the family can take off my plate. Be concrete and short.\n\nThis week:\n${summary || '(nothing scheduled yet)'}`,
+      text: `I'm slammed. Triage my week against my Charter goals. Keep me moving toward the goals; make it lighter, not smaller. Say what to protect, what to shrink, what to move and what the Crew can take off my plate. Be concrete and short.\n\nThis week:\n${summary || '(nothing scheduled yet)'}`,
     });
     setAiTriage(res.text);
     setThinking(false);
@@ -143,16 +143,16 @@ export default function Planner() {
               {weekdayName(c.date)} doesn't fit. Yet.
             </Txt>
             <Txt variant="body" color={p.onStoneMuted} style={{ marginTop: 6 }}>
-              {c.a.title} and {c.b.title} overlap. {head.name}'s two plans:
+              {c.a.title} and {c.b.title} overlap. {lead.name}'s two plans:
             </Txt>
             {plansFor(c).map((plan) => (
               <PressScale
                 key={plan.id}
                 onPress={() => {
                   plan.apply();
-                  addReceipt({ memberId: head.id, text: `Fixed a conflict on ${weekdayName(c.date)}: ${plan.title}`, connector: 'Calendar', kind: 'did', undoable: false });
+                  addReceipt({ memberId: lead.id, text: `Fixed a conflict on ${weekdayName(c.date)}: ${plan.title}`, connector: 'Calendar', kind: 'did', undoable: false });
                   haptic('success');
-                  toast('Fixed. Both blocks fit now.', { label: 'Undo', onPress: plan.undo }, head.color);
+                  toast('Fixed. Both blocks fit now.', { label: 'Undo', onPress: plan.undo }, lead.color);
                 }}
                 accessibilityLabel={`Plan ${plan.id}: ${plan.title}`}
               >
@@ -183,7 +183,7 @@ export default function Planner() {
       </Row>
       <Animated.View layout={LinearTransition} style={{ gap: 8, marginTop: 10 }}>
         {dayBlocks.length === 0 ? (
-          <Empty title="Open water" body="Nothing here yet. Add a block or ask your family to fill it with what matters." action={<Btn title="Add a block" small onPress={() => setAdding(true)} />} />
+          <Empty title="Wide open" body="Nothing here yet. Add a block or ask your Crew to fill it with what matters." action={<Btn title="Add a block" small onPress={() => setAdding(true)} />} />
         ) : (
           dayBlocks.map((b, i) => (
             <BlockCard
@@ -245,7 +245,7 @@ export default function Planner() {
                         onPress={() => {
                           const [y, m, d] = b.date.split('-').map(Number);
                           updateBlock(b.id, { date: isoDate(addDays(new Date(y, m - 1, d), 7)) });
-                          toast(`Moved "${b.title}" to next week.`, { label: 'Undo', onPress: () => useFamily.getState().updateBlock(b.id, { date: b.date }) });
+                          toast(`Moved "${b.title}" to next week.`, { label: 'Undo', onPress: () => useCrew.getState().updateBlock(b.id, { date: b.date }) });
                         }}
                       />
                     )}
@@ -258,13 +258,13 @@ export default function Planner() {
         <Card tone="soft" carve={1} padding={14}>
           <Row gap={8}>
             <Txt variant="h3" style={{ flex: 1 }}>
-              {head.name}'s take
+              {lead.name}'s take
             </Txt>
             {!aiTriage && !thinking && <Btn title="Ask" small onPress={askTriage} />}
           </Row>
           {thinking ? (
             <View style={{ marginTop: 10 }}>
-              <ThinkingDots color={head.color} />
+              <ThinkingDots color={lead.color} />
             </View>
           ) : aiTriage ? (
             <View style={{ marginTop: 8 }}>

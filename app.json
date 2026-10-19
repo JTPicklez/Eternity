@@ -30,7 +30,12 @@
     },
     "web": {
       "output": "single",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/favicon.png",
+      "name": "Eternity",
+      "shortName": "Eternity",
+      "description": "A Crew of AI teammates that make the work lighter, not smaller.",
+      "themeColor": "#EEE8DD",
+      "backgroundColor": "#EEE8DD"
     },
     "plugins": [
       "expo-router",
@@ -61,6 +66,20 @@
         {
           "iosAppId": "ca-app-pub-3940256099942544~1458002511",
           "androidAppId": "ca-app-pub-3940256099942544~3347511713"
+        }
+      ],
+      "expo-mail-composer",
+      [
+        "expo-calendar",
+        {
+          "calendarPermission": "Eternity reads your calendar so your Crew can plan around what's already there. Nothing leaves your phone unless you ask.",
+          "remindersPermission": "Eternity can read your reminders so your Crew can plan around them."
+        }
+      ],
+      [
+        "expo-contacts",
+        {
+          "contactsPermission": "Eternity looks up a contact only when you ask it to draft a text or email to them."
         }
       ]
     ],

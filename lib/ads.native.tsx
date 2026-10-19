@@ -1,5 +1,5 @@
 /**
- * AdMob, non-personalized only. Eternity never shares what's in your family
+ * AdMob, non-personalized only. Eternity never shares what's in your Crew
  * with an ad network: ads don't get your chats, your calendar or your
  * interests, and requestNonPersonalizedAdsOnly keeps targeting off.
  *
@@ -9,6 +9,7 @@
 import React from 'react';
 import { View } from 'react-native';
 import type * as AdsModule from 'react-native-google-mobile-ads';
+import { CONFIG } from './config';
 import type { Tier } from './types';
 
 type Ads = typeof AdsModule;
@@ -24,8 +25,8 @@ try {
 // Paste Eternity's real ad unit IDs from AdMob before release. Until then,
 // and always in development, Google's test units are used.
 // (Aibram's units are tied to Aibram's app, so they can't be reused.)
-const REAL_BANNER_ID = '';
-const REAL_REWARDED_ID = '';
+const REAL_BANNER_ID = CONFIG.admob.banner;
+const REAL_REWARDED_ID = CONFIG.admob.rewarded;
 
 const REQUEST = { requestNonPersonalizedAdsOnly: true };
 

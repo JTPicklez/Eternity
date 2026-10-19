@@ -10,7 +10,7 @@ export default function TabsLayout() {
       screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: p.bg }, animation: 'fade' }}
     >
       <Tabs.Screen name="index" />
-      <Tabs.Screen name="family" />
+      <Tabs.Screen name="crew" />
       <Tabs.Screen name="browser" />
       <Tabs.Screen name="me" />
     </Tabs>

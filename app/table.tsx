@@ -1,6 +1,6 @@
 /**
- * The Family Table: one thread where your teammates talk to each other in
- * front of you. Conflicts get surfaced honestly, and the head brings you
+ * The Crew Table: one thread where your teammates talk to each other in
+ * front of you. Conflicts get surfaced honestly, and the lead brings you
  * options. You make the call.
  */
 import React, { useEffect, useRef, useState } from 'react';
@@ -13,9 +13,9 @@ import Animated, { FadeIn, FadeInUp, ZoomIn } from 'react-native-reanimated';
 import { askTeammate } from '@/lib/ai';
 import { runAction } from '@/lib/actions';
 import { addDays, isoDate, shortTime } from '@/lib/dates';
-import { memberOrTemplate, nameOf, useFamily, useHead } from '@/lib/store';
+import { memberOrTemplate, nameOf, useCrew, useLead } from '@/lib/store';
 import type { TableMessage } from '@/lib/types';
-import { Pebble } from '@/components/Pebble';
+import { MemberPebble } from '@/components/Pebble';
 import { ProposalCard } from '@/components/ProposalCard';
 import { RichText } from '@/components/RichText';
 import { ThinkingDots } from '@/components/Thinking';
@@ -28,7 +28,7 @@ const PROMPTS = ["What's at risk this week?", 'Who has time Thursday night?', 'I
 
 /** The sample conflict resolves into real calendar changes. */
 function applySampleChoice(optionId: string) {
-  const st = useFamily.getState();
+  const st = useCrew.getState();
   const tomorrow = isoDate(addDays(new Date(), 1));
   const demo = st.blocks.find((b) => b.date === tomorrow && /demo prep/i.test(b.title));
   const calc = st.blocks.find((b) => b.date === tomorrow && /calc quiz review/i.test(b.title));
@@ -39,19 +39,19 @@ function applySampleChoice(optionId: string) {
     if (demo) st.updateBlock(demo.id, { time: '12:00', end: '15:30', sub: 'With Bolt · instead of lunch' });
     if (calc) st.updateBlock(calc.id, { time: '19:00', end: '20:30', sub: 'With Sage · done before 9' });
   }
-  st.addReceipt({ memberId: st.headId, text: 'Rearranged tomorrow so demo prep and Calc review both fit', connector: 'Calendar', kind: 'did', undoable: false });
+  st.addReceipt({ memberId: st.leadId, text: 'Rearranged tomorrow so demo prep and Calc review both fit', connector: 'Calendar', kind: 'did', undoable: false });
 }
 
 export default function Table() {
   const p = useTheme();
-  const head = useHead();
-  const members = useFamily((s) => s.members);
-  const table = useFamily((s) => s.table);
-  const sample = useFamily((s) => s.sample);
-  const appendTable = useFamily((s) => s.appendTable);
-  const chooseTableOption = useFamily((s) => s.chooseTableOption);
-  const sendTableDraft = useFamily((s) => s.sendTableDraft);
-  const setTableAction = useFamily((s) => s.setTableAction);
+  const lead = useLead();
+  const members = useCrew((s) => s.members);
+  const table = useCrew((s) => s.table);
+  const sample = useCrew((s) => s.sample);
+  const appendTable = useCrew((s) => s.appendTable);
+  const chooseTableOption = useCrew((s) => s.chooseTableOption);
+  const sendTableDraft = useCrew((s) => s.sendTableDraft);
+  const setTableAction = useCrew((s) => s.setTableAction);
   const [text, setText] = useState('');
   const [thinking, setThinking] = useState(false);
   const listRef = useRef<FlatList<TableMessage>>(null);
@@ -67,20 +67,20 @@ export default function Table() {
     setText('');
     appendTable({ from: 'you', text: q });
     setThinking(true);
-    const transcript = useFamily
+    const transcript = useCrew
       .getState()
       .table.slice(-12)
       .map((m) => `${nameOf(m.from)}: ${m.text}${m.options ? ` [options: ${m.options.map((o) => o.title).join(' / ')}]` : ''}${m.chosen ? ` (chose ${m.chosen})` : ''}`)
       .join('\n');
     const res = await askTeammate({
-      member: head,
+      member: lead,
       history: [],
       task: 'table',
-      text: `Family Table so far:\n${transcript}\n\nAs head of the family, answer the person's latest message for the whole family. If teammates' needs collide, say so honestly and give two options.`,
+      text: `Crew Table so far:\n${transcript}\n\nAs the Crew's lead, answer the person's latest message for the whole Crew. If teammates' needs collide, say so honestly and give two options.`,
     });
     setThinking(false);
     appendTable({
-      from: head.id,
+      from: lead.id,
       text: res.text || 'Here are two ways to do it:',
       options: res.options.length ? res.options.map((o, i) => ({ id: String.fromCharCode(65 + i), title: o.title, desc: o.desc })) : undefined,
       actions: res.actions.length ? res.actions : undefined,
@@ -97,14 +97,14 @@ export default function Table() {
     if (isSampleConflict) {
       applySampleChoice(optionId);
       setTimeout(() => {
-        appendTable({ from: head.id, text: `Locked in: ${opt?.title}. Tomorrow is rearranged and both blocks are protected.` });
+        appendTable({ from: lead.id, text: `Locked in: ${opt?.title}. Tomorrow is rearranged and both blocks are protected.` });
         if (members.some((x) => x.id === 'sage'))
           appendTable({
             from: 'sage',
             text: 'Want me to tell Prof. Lee you will be at office hours Thursday instead of Wednesday?',
             draft: { to: 'Prof. Lee', text: 'Hi Professor Lee, could I come to office hours Thursday instead of Wednesday this week? Thank you!', sent: false },
           });
-        toast('Tomorrow is rearranged.', { label: 'See it', onPress: () => router.push('/planner') }, head.color);
+        toast('Tomorrow is rearranged.', { label: 'See it', onPress: () => router.push('/planner') }, lead.color);
       }, 500);
     } else {
       ask(`Let's go with ${optionId}: ${opt?.title}.`);
@@ -122,16 +122,16 @@ export default function Table() {
       );
     }
     const m = memberOrTemplate(item.from, members);
-    const isHead = item.from === head.id;
+    const isLead = item.from === lead.id;
     return (
       <Animated.View entering={FadeInUp.delay(Math.min(index, 3) * 60)} style={{ flexDirection: 'row', gap: 10, marginBottom: 14 }}>
-        <Pebble shape={m.shape} color={m.color} face={m.face} mark={m.mark} motion={m.motion} size={34} animate={false} />
+        <MemberPebble member={m} size={34} animate={false} />
         <View style={{ flex: 1 }}>
           <Row gap={6}>
             <Txt variant="smallStrong" color={textOn(p, m.color)}>
               {m.name}
             </Txt>
-            {isHead && <Badge text="Head" color={p.card2} textColor={p.muted} />}
+            {isLead && <Badge text="Lead" color={p.card2} textColor={p.muted} />}
             {m.visiting && <Badge text="Sample" color={p.card2} textColor={p.muted} />}
             <Txt variant="tiny">{shortTime(item.at)}</Txt>
           </Row>
@@ -217,7 +217,7 @@ export default function Table() {
                     }}
                   />
                   <Txt variant="tiny" style={{ flex: 1 }}>
-                    Your family never sends as you.
+                    Your Crew never sends as you.
                   </Txt>
                 </Row>
               )}
@@ -239,13 +239,13 @@ export default function Table() {
         <Row gap={6} style={{ height: 52 }}>
           <IconBtn icon="chevron-back" label="Back" onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} />
           <View style={{ flex: 1 }}>
-            <Txt variant="h3">Family Table</Txt>
+            <Txt variant="h3">Crew Table</Txt>
             <Txt variant="tiny">Everyone talks here. You decide.</Txt>
           </View>
           <View style={{ flexDirection: 'row' }}>
             {members.slice(0, 5).map((m, i) => (
               <View key={m.id} style={{ marginLeft: i ? -10 : 0 }}>
-                <Pebble shape={m.shape} color={m.color} face={m.face} mark={m.mark} size={30} animate={false} outline={p.bg} />
+                <MemberPebble member={m} size={30} animate={false} outline={p.bg} />
               </View>
             ))}
           </View>
@@ -265,18 +265,18 @@ export default function Table() {
                 The table is quiet.
               </Txt>
               <Txt variant="body" center>
-                Bring something to the whole family and watch them work it out.
+                Bring something to the whole Crew and watch them work it out.
               </Txt>
             </Animated.View>
           }
           ListFooterComponent={
             thinking ? (
               <Row gap={10} style={{ marginBottom: 12 }}>
-                <Pebble shape={head.shape} color={head.color} mark={head.mark} size={34} state="working" />
+                <MemberPebble member={lead} size={34} state="working" />
                 <View style={{ backgroundColor: p.card, padding: 12, borderRadius: 14 }}>
-                  <ThinkingDots color={head.color} />
+                  <ThinkingDots color={lead.color} />
                 </View>
-                <Txt variant="tiny">The family is huddling…</Txt>
+                <Txt variant="tiny">The Crew is huddling…</Txt>
               </Row>
             ) : null
           }
@@ -312,9 +312,9 @@ export default function Table() {
                 fontFamily: fonts.body,
                 fontSize: 15.5,
               }}
-              accessibilityLabel="Message the whole family"
+              accessibilityLabel="Message the whole Crew"
             />
-            <PressScale onPress={() => ask(text)} disabled={!text.trim() || thinking} accessibilityLabel="Send to the family">
+            <PressScale onPress={() => ask(text)} disabled={!text.trim() || thinking} accessibilityLabel="Send to the Crew">
               <View style={{ width: 46, height: 46, borderRadius: 16, backgroundColor: text.trim() ? p.stone : p.card2, alignItems: 'center', justifyContent: 'center' }}>
                 <Ionicons name="arrow-up" size={22} color={text.trim() ? p.onStone : p.muted} />
               </View>

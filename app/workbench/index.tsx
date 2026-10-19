@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { PLAN_LIMITS } from '@/lib/catalog';
-import { useFamily } from '@/lib/store';
+import { useCrew } from '@/lib/store';
 import { MemberPebble } from '@/components/Pebble';
 import { LiveScreen, SCRIPTS } from '@/components/LiveScreen';
 import { BackHeader, Badge, Btn, Card, LiveDot, ProgressBar, Row, Screen, Txt } from '@/components/ui';
@@ -12,8 +12,8 @@ import { useTheme } from '@/theme/ThemeProvider';
 
 export default function Workbench() {
   const p = useTheme();
-  const members = useFamily((s) => s.members);
-  const tier = useFamily((s) => s.settings.tier);
+  const members = useCrew((s) => s.members);
+  const tier = useCrew((s) => s.settings.tier);
   const hours = PLAN_LIMITS[tier].workbenchHours;
   const working = members.filter((m) => m.state === 'working');
 
@@ -51,8 +51,8 @@ export default function Workbench() {
           full
           style={{ marginTop: 14 }}
           onPress={() => {
-            working.forEach((m) => useFamily.getState().setMemberState(m.id, 'idle', 'Stopped by you'));
-            useFamily.getState().errands.filter((e) => e.status === 'working').forEach((e) => useFamily.getState().updateErrand(e.id, { status: 'declined' }));
+            working.forEach((m) => useCrew.getState().setMemberState(m.id, 'idle', 'Stopped by you'));
+            useCrew.getState().errands.filter((e) => e.status === 'working').forEach((e) => useCrew.getState().updateErrand(e.id, { status: 'declined' }));
           }}
         />
       )}

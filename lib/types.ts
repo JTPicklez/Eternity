@@ -2,7 +2,22 @@ export type Shape = 'diamond' | 'almond' | 'wedge' | 'bean' | 'round';
 export type Face = 'eyes' | 'sleepy' | 'faceless';
 export type Mark = 'diamond' | 'book' | 'brackets' | 'pulse' | 'spark' | 'chart' | 'pen';
 export type Motion = 'calm' | 'slow' | 'bouncy' | 'sharp';
-export type Finish = 'matte' | 'glow' | 'stone' | 'glass' | 'gold';
+/** What the stone is made of. Gold and marble are Plus. */
+export type Finish = 'smooth' | 'granite' | 'glass' | 'moss' | 'glow' | 'gold' | 'marble';
+/** The expression a pebble wears. Work states pick one automatically. */
+export type Mood = 'happy' | 'curious' | 'focused' | 'proud' | 'sleepy' | 'excited' | 'surprised';
+/** Accessories. Some are free, some are earned with time together, some are Plus. */
+export type Extra =
+  | 'glasses'
+  | 'sunglasses'
+  | 'freckles'
+  | 'bow'
+  | 'beanie'
+  | 'sprout'
+  | 'flower'
+  | 'star'
+  | 'crown'
+  | 'partyhat';
 export type Autonomy = 'suggest' | 'ask' | 'do';
 export type ActionLevel = 'auto' | 'tell' | 'ask';
 export type MemberState = 'idle' | 'working' | 'waiting' | 'done';
@@ -28,12 +43,17 @@ export interface Member {
   mark: Mark;
   motion: Motion;
   finish: Finish;
+  /** Resting expression when they aren't busy. Defaults to happy. */
+  mood?: Mood;
+  extras?: Extra[];
+  /** Keep the stone looking brand new instead of wearing smooth over time. */
+  polished?: boolean;
   personality: Personality;
   autonomy: Autonomy;
   actionLevels: Record<string, ActionLevel>;
   connectors: string[];
   triggers: string[];
-  seat: number; // 0..8 around the loop, -1 = the center (head)
+  seat: number; // 0..8 around the loop, -1 = the center (lead)
   state: MemberState;
   status: string;
   joinedAt: number;
@@ -183,7 +203,7 @@ export interface Trail {
   id: string;
   goal: string;
   color: string;
-  tabs: { id: string; title: string; url: string; summary?: string; stale?: boolean }[];
+  tabs: { id: string; title: string; url: string; summary?: string; stale?: boolean; text?: string; note?: string; savedAt?: number }[];
 }
 
 export interface GuardEvent {
@@ -198,14 +218,27 @@ export interface MemoryFact {
   id: string;
   text: string;
   at: number;
-  source: 'you' | 'learned';
+  source: 'you' | 'learned' | 'imported';
+  /** Where an imported fact came from, like 'ChatGPT'. */
+  from?: string;
 }
 
 export interface Flashcard {
   id: string;
+  /** May contain math in LaTeX between $...$ or $$...$$. */
   front: string;
   back: string;
   deck: string;
+  /** A nudge shown before flipping, without giving the answer away. */
+  hint?: string;
+  /** Worked steps from question to answer. */
+  steps?: string[];
+  // spaced repetition (lib/srs.ts)
+  due?: number;
+  interval?: number;
+  ease?: number;
+  reps?: number;
+  lapses?: number;
 }
 
 export interface WeekLog {
@@ -213,11 +246,11 @@ export interface WeekLog {
   hours: number[]; // per charter goal index, plus last = unplanned
 }
 
-export interface Confluence {
+export interface Meetup {
   id: string;
   name: string;
   purpose: string;
-  people: { name: string; color: string; head: string }[];
+  people: { name: string; color: string; lead: string }[];
   status: 'negotiating' | 'proposed' | 'locked';
   proposal?: string;
 }

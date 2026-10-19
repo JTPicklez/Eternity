@@ -15,3 +15,6 @@ android/
 expo-env.d.ts
 functions/node_modules/
 firebase-debug.log*
+
+# connector app secrets (set with firebase functions:secrets:set)
+functions/connector-apps.json

@@ -1,5 +1,6 @@
 /**
- * Talking to Claude through the callFamily Cloud Function.
+ * Talking to Claude through the callFamily Cloud Function (the endpoint kept
+ * its original name so deployed servers keep working after the Crew rename).
  *
  * The API key lives only on the server. The app sends the signed-in user's
  * Firebase ID token; the function checks it, picks the model for their plan,
@@ -11,14 +12,15 @@
  */
 import { getIdToken } from '@/firebase/auth';
 import { FUNCTIONS_BASE } from '@/firebase/config';
-import { templateFor } from './catalog';
+import { CONNECTORS, templateFor } from './catalog';
 import { clockAmPm, isoDate } from './dates';
-import { useFamily } from './store';
+import { phoneContext, refreshPhone } from './phone';
+import { useCrew } from './store';
 import type { ChatMessage, Member, ProposedAction } from './types';
 
-export const CALL_FAMILY_URL = `${FUNCTIONS_BASE}/callFamily`;
+export const CALL_CREW_URL = `${FUNCTIONS_BASE}/callFamily`;
 
-export type Task = 'chat' | 'table' | 'huddle' | 'page' | 'flashcards' | 'review' | 'plan';
+export type Task = 'chat' | 'table' | 'huddle' | 'page' | 'flashcards' | 'review' | 'plan' | 'artifact';
 
 export interface AiResult {
   text: string;
@@ -40,6 +42,8 @@ export const ACTION_META: Record<string, { verb: string; icon: string; alwaysAsk
   create_routine: { verb: 'Create a routine', icon: 'repeat-outline' },
   plan_errand: { verb: 'Start an errand', icon: 'bag-handle-outline', alwaysAsk: true },
   make_flashcards: { verb: 'Make flashcards', icon: 'albums-outline' },
+  connector_action: { verb: 'Do this in a connected app', icon: 'link-outline', alwaysAsk: true },
+  make_artifact: { verb: 'Build it', icon: 'construct-outline' },
 };
 
 function str(v: unknown): string {
@@ -58,7 +62,14 @@ export function describeAction(name: string, input: Record<string, unknown>): { 
     case 'start_flow':
       return { summary: `${str(input.task) || 'Deep work'}`, detail: `${Number(input.sprints) || 4} sprints of ${Number(input.minutes) || 50} minutes` };
     case 'draft_message':
-      return { summary: `To ${str(input.to) || 'someone'}`, detail: str(input.text) };
+      return {
+        summary: `${input.channel === 'email' ? 'Email' : input.channel === 'text' ? 'Text' : 'Message'} to ${str(input.to) || 'someone'}`,
+        detail: `${input.subject ? `${str(input.subject)}\n\n` : ''}${str(input.text)}\n\nOpens your composer. You tap Send.`,
+      };
+    case 'make_artifact':
+      return { summary: str(input.title) || 'An artifact', detail: 'Opens in its own viewer. Preview, code and every version, kept on your phone.' };
+    case 'connector_action':
+      return { summary: str(input.summary) || `${str(input.action)} in ${str(input.connector)}`, detail: `In ${str(input.connector)}. Nothing happens until you approve.` };
     case 'create_routine':
       return { summary: str(input.name) || 'New routine', detail: `When ${str(input.when)}, ${str(input.then)}` };
     case 'plan_errand':
@@ -107,6 +118,10 @@ interface ContentBlock {
 
 function toResult(content: ContentBlock[], extra: Partial<AiResult> = {}): AiResult {
   const text = content.filter((b) => b.type === 'text').map((b) => b.text ?? '').join('\n').trim();
+  // Artifact code is big. The action keeps it; the chat history gets a short stand-in.
+  const slim = content.map((b) =>
+    b.type === 'tool_use' && b.name === 'make_artifact' && b.input ? { ...b, input: { ...b.input, html: '[saved as an artifact on the phone]' } } : b,
+  );
   const { clean, memories, options } = parseBlocks(text);
   const actions: ProposedAction[] = content
     .filter((b) => b.type === 'tool_use' && b.name && b.id)
@@ -124,7 +139,7 @@ function toResult(content: ContentBlock[], extra: Partial<AiResult> = {}): AiRes
         alwaysAsk: ACTION_META[b.name!]?.alwaysAsk,
       };
     });
-  return { text: clean, rawContent: content, actions, memories, options, preview: false, ...extra };
+  return { text: clean, rawContent: slim, actions, memories, options, preview: false, ...extra };
 }
 
 // ── history ─────────────────────────────────────────────────────────────────
@@ -187,7 +202,7 @@ export function buildHistory(messages: ChatMessage[], nextUserText?: string, max
 
 // ── context the teammate gets ───────────────────────────────────────────────
 export function buildContext(member: Member) {
-  const s = useFamily.getState();
+  const s = useCrew.getState();
   const today = isoDate();
   const todays = s.blocks
     .filter((b) => b.date === today)
@@ -206,15 +221,17 @@ export function buildContext(member: Member) {
       name: member.name,
       defaultName: member.defaultName,
       role: member.role,
+      // Templates are only starting points. Once the person writes the job,
+      // their words are the job.
       persona:
-        member.kind === 'custom'
-          ? `You are ${member.name}, a teammate whose job is: ${member.role}. How you work: ${member.blurb}`
-          : t.persona,
+        member.kind !== 'custom' && member.role === t.role && member.blurb === t.blurb
+          ? t.persona
+          : `Your job, in the person's own words: ${member.role || 'helping however they need'}. What you're best at and how you work: ${member.blurb || 'work it out with them'}. Stay focused on that job. If something is outside it, help anyway and mention which teammate might fit better.`,
       personality: member.personality,
       autonomy: member.autonomy,
-      isHead: member.id === s.headId,
+      isLead: member.id === s.leadId,
     },
-    family: s.members.map((m) => ({ name: m.name, role: m.role, head: m.id === s.headId })),
+    crew: s.members.map((m) => ({ name: m.name, role: m.role, lead: m.id === s.leadId })),
     charter: s.charter,
     // Saved facts only; nothing is learned silently unless the person turned learning on.
     memory: s.settings.privateSession ? [] : s.facts.slice(0, 40).map((f) => f.text),
@@ -222,6 +239,8 @@ export function buildContext(member: Member) {
     today: todays,
     upcoming,
     connected: s.connected,
+    // From the phone itself (Apple Calendar, weather), when those are on.
+    phone: phoneContext(),
   };
 }
 
@@ -241,7 +260,7 @@ export async function askTeammate({
   extra?: Record<string, unknown>;
   deep?: boolean;
 }): Promise<AiResult> {
-  const s = useFamily.getState();
+  const s = useCrew.getState();
   const gate = s.bumpUsage('messages');
   if (!gate.ok) {
     return {
@@ -255,13 +274,15 @@ export async function askTeammate({
     };
   }
 
+  await refreshPhone().catch(() => {});
   const token = s.guest ? null : await getIdToken();
   if (!token) return simulate(member, text, task);
 
   try {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 45_000);
-    const res = await fetch(CALL_FAMILY_URL, {
+    // Building an artifact writes a whole file, so it gets longer.
+    const timer = setTimeout(() => controller.abort(), task === 'artifact' ? 240_000 : 60_000);
+    const res = await fetch(CALL_CREW_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({
@@ -287,7 +308,12 @@ export async function askTeammate({
       };
     }
     if (!res.ok) return simulate(member, text, task);
-    const data = (await res.json()) as { content?: ContentBlock[]; model?: string };
+    const data = (await res.json()) as { content?: ContentBlock[]; model?: string; reads?: { connector: string; action: string }[] };
+    // Reads from connected apps happened on the server; leave a receipt for each.
+    (data.reads ?? []).slice(0, 6).forEach((r) => {
+      const name = CONNECTORS.find((c) => c.id === r.connector)?.name ?? r.connector;
+      useCrew.getState().addReceipt({ memberId: member.id, text: `Read ${name} (${r.action})`, connector: name, kind: 'read', undoable: false });
+    });
     return toResult(data.content ?? [], { model: data.model });
   } catch {
     return simulate(member, text, task);
@@ -295,6 +321,40 @@ export async function askTeammate({
 }
 
 // ── preview replies (no account, offline, or the function isn't deployed) ───
+const DEMO_ARTIFACT = `<!doctype html>
+<html><head><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  :root { --bg:#F8F4EC; --ink:#1E2023; --muted:#6B6257; --card:#FFFFFF; --accent:#1E5BD2; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#1C2025; --ink:#EEE8DD; --muted:#9AA0A6; --card:#22272E; --accent:#5CC8F2; } }
+  body { margin:0; padding:20px; font-family:-apple-system,system-ui,sans-serif; background:var(--bg); color:var(--ink); }
+  h1 { font-size:24px; margin:0 0 4px; } p.sub { color:var(--muted); margin:0 0 16px; }
+  .goal { display:inline-block; padding:6px 10px; border-radius:10px; background:var(--card); margin:0 6px 6px 0; font-size:13px; }
+  .item { display:flex; gap:12px; align-items:center; padding:12px; border-radius:14px; background:var(--card); margin-bottom:8px; }
+  .item.done { opacity:.5; text-decoration:line-through; }
+  .time { font-variant-numeric:tabular-nums; color:var(--accent); font-weight:600; min-width:52px; }
+  .bar { height:8px; border-radius:4px; background:var(--card); overflow:hidden; margin:14px 0 18px; }
+  .bar span { display:block; height:100%; background:var(--accent); }
+</style></head>
+<body>
+  <h1>Today at a glance</h1>
+  <p class="sub" id="sub">Loading your day…</p>
+  <div id="goals"></div>
+  <div class="bar"><span id="bar" style="width:0%"></span></div>
+  <div id="list"></div>
+<script>
+  (async function(){
+    try {
+      const [today, g] = await Promise.all([eternity.get('today'), eternity.get('goals')]);
+      document.getElementById('goals').innerHTML = (g.goals || []).map(x => '<span class="goal">' + x + '</span>').join('');
+      const done = today.filter(b => b.done).length;
+      document.getElementById('sub').textContent = today.length ? done + ' of ' + today.length + ' done' : 'Nothing planned yet. Wide open.';
+      document.getElementById('bar').style.width = (today.length ? Math.round(done / today.length * 100) : 0) + '%';
+      document.getElementById('list').innerHTML = today.map(b => '<div class="item' + (b.done ? ' done' : '') + '"><span class="time">' + b.time + '</span><span>' + b.title + '</span></div>').join('');
+    } catch (e) { document.getElementById('sub').textContent = 'Could not load your day.'; }
+  })();
+</script>
+</body></html>`;
+
 function previewTime(text: string): string | undefined {
   const m = text.match(/\b(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i);
   if (!m) return undefined;
@@ -327,11 +387,23 @@ function durationMinutes(text: string): number | undefined {
 
 export function simulate(member: Member, text: string, task: Task = 'chat'): AiResult {
   const lower = text.toLowerCase();
-  const first = useFamily.getState().firstName || 'friend';
+  const first = useCrew.getState().firstName || 'friend';
   const content: ContentBlock[] = [];
   const say = (t: string) => content.push({ type: 'text', text: t });
   const tool = (name: string, input: Record<string, unknown>) =>
     content.push({ type: 'tool_use', id: `toolu_preview_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`, name, input });
+
+  if (task === 'artifact') {
+    const existing = text.match(/<artifact-html>\n([\s\S]*?)\n<\/artifact-html>/);
+    if (existing) {
+      say('Preview mode can only show what an edit looks like. Make an account and I can really change it.');
+      tool('make_artifact', { title: 'Today at a glance', html: existing[1].replace('</body>', '<p style="text-align:center;opacity:.6">Edited in preview mode</p></body>'), uses: ['today', 'goals'] });
+    } else {
+      say("Here's a small one to show how artifacts work. It reads today's plan live.");
+      tool('make_artifact', { title: 'Today at a glance', html: DEMO_ARTIFACT, uses: ['today', 'goals'] });
+    }
+    return { ...toResult(content), preview: true };
+  }
 
   const tomorrow = /tomorrow/.test(lower);
   const date = isoDate(tomorrow ? new Date(Date.now() + 86400000) : new Date());
@@ -346,6 +418,9 @@ export function simulate(member: Member, text: string, task: Task = 'chat'): AiR
         ]) +
         '\n```',
     );
+  } else if (/\b(build|make|create) (me )?(an? )?(app|tool|tracker|calculator|dashboard|game|chart|timer|page)\b/.test(lower)) {
+    say('Built it. Open it to see it running, then tap anything to change it.');
+    tool('make_artifact', { title: 'Today at a glance', html: DEMO_ARTIFACT, uses: ['today', 'goals'] });
   } else if (/\b(flight|movie|ticket|uber|lyft|ride|book|reserve|order)\b/.test(lower)) {
     say(`On it. I'll look and get everything ready, then you make the final tap with Face ID. Nothing gets paid for without you.`);
     tool('plan_errand', { request: text });

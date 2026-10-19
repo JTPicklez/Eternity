@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { ALWAYS_ASK, CONNECTORS } from '@/lib/catalog';
 import { timeAgo } from '@/lib/dates';
-import { useFamily, useMember } from '@/lib/store';
+import { useCrew, useMember } from '@/lib/store';
 import type { ActionLevel, Autonomy } from '@/lib/types';
 import { MemberPebble } from '@/components/Pebble';
 import { BackHeader, Badge, Btn, Card, Chip, Empty, Field, haptic, Label, PressScale, Row, Screen, Segmented, Sheet, StoneSlider, Txt } from '@/components/ui';
@@ -24,12 +24,12 @@ export default function Teammate() {
   const p = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const member = useMember(id);
-  const headId = useFamily((s) => s.headId);
-  const connected = useFamily((s) => s.connected);
-  const receipts = useFamily((s) => s.receipts);
-  const updateMember = useFamily((s) => s.updateMember);
-  const renameMember = useFamily((s) => s.renameMember);
-  const removeMember = useFamily((s) => s.removeMember);
+  const leadId = useCrew((s) => s.leadId);
+  const connected = useCrew((s) => s.connected);
+  const receipts = useCrew((s) => s.receipts);
+  const updateMember = useCrew((s) => s.updateMember);
+  const renameMember = useCrew((s) => s.renameMember);
+  const removeMember = useCrew((s) => s.removeMember);
   const [renaming, setRenaming] = useState(false);
   const [name, setName] = useState('');
   const [error, setError] = useState('');
@@ -39,12 +39,12 @@ export default function Teammate() {
     return (
       <Screen>
         <BackHeader />
-        <Empty title="Not in your family" body="This teammate may have been removed." />
+        <Empty title="Not in your Crew" body="This teammate may have been removed." />
       </Screen>
     );
   }
 
-  const isHead = member.id === headId;
+  const isLead = member.id === leadId;
   const mine = receipts.filter((r) => r.memberId === member.id).slice(0, 5);
   const available = CONNECTORS.filter((c) => connected.includes(c.id));
 
@@ -78,12 +78,28 @@ export default function Teammate() {
         </PressScale>
         <Row gap={8} style={{ marginTop: 6 }}>
           <Txt variant="smallStrong" color={textOn(p, member.color)}>
-            {isHead ? 'Head of the family' : member.role}
+            {isLead ? 'Crew lead' : member.role}
           </Txt>
           {member.name !== member.defaultName && <Badge text={`was ${member.defaultName}`} color={p.card2} textColor={p.muted} />}
         </Row>
-        <Btn title="Reshape in the Riverbed" small variant="ghost" icon="color-palette-outline" style={{ marginTop: 14, alignSelf: 'center' }} onPress={() => router.push({ pathname: '/riverbed', params: { id: member.id } })} />
+        <Btn title="Customize in Pebble Studio" small variant="ghost" icon="color-palette-outline" style={{ marginTop: 14, alignSelf: 'center' }} onPress={() => router.push({ pathname: '/studio', params: { id: member.id } })} />
       </Animated.View>
+
+      <Label>Their job</Label>
+      <Card carve={2}>
+        <Txt variant="bodyStrong">{member.role || 'No job written yet'}</Txt>
+        <Txt variant="body" style={{ marginTop: 4 }}>
+          {member.blurb || "Write what they're best at and they'll work that way."}
+        </Txt>
+        <Btn
+          title="Edit their job"
+          small
+          variant="quiet"
+          icon="create-outline"
+          style={{ marginTop: 6 }}
+          onPress={() => router.push({ pathname: '/studio', params: { id: member.id, tab: 'job' } })}
+        />
+      </Card>
 
       <Label>Personality</Label>
       <Card carve={0}>
@@ -202,13 +218,13 @@ export default function Teammate() {
         <Btn title="All receipts" small variant="quiet" onPress={() => router.push('/receipts')} />
       </Card>
 
-      {!isHead && (
-        <Btn title={`Remove ${member.name} from the family`} variant="danger" full style={{ marginTop: 26 }} onPress={() => setConfirmRemove(true)} />
+      {!isLead && (
+        <Btn title={`Remove ${member.name} from the Crew`} variant="danger" full style={{ marginTop: 26 }} onPress={() => setConfirmRemove(true)} />
       )}
 
       <Sheet visible={renaming} onClose={() => setRenaming(false)} title={`Rename ${member.name}`}>
         <Txt variant="small" style={{ marginBottom: 10 }}>
-          Names stay unique in your family so you always know who's talking.
+          Names stay unique in your Crew so you always know who's talking.
         </Txt>
         <Field
           value={name}
@@ -241,7 +257,7 @@ export default function Teammate() {
             onPress={() => {
               setConfirmRemove(false);
               removeMember(member.id);
-              toast(`${member.name} left the family.`);
+              toast(`${member.name} left the Crew.`);
               router.back();
             }}
           />

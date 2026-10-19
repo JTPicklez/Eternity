@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { PACKS, pushWords } from '@/lib/catalog';
-import { useFamily } from '@/lib/store';
+import { useCrew } from '@/lib/store';
 import type { Autonomy } from '@/lib/types';
 import { BackHeader, Btn, Card, Chip, Field, IconBtn, Label, Row, Screen, Segmented, StoneSlider, Toggle, Txt } from '@/components/ui';
 import { HoldButton } from '@/components/HoldButton';
@@ -12,8 +12,8 @@ import { useTheme } from '@/theme/ThemeProvider';
 
 export default function CharterEdit() {
   const p = useTheme();
-  const charter = useFamily((s) => s.charter);
-  const setCharter = useFamily((s) => s.setCharter);
+  const charter = useCrew((s) => s.charter);
+  const setCharter = useCrew((s) => s.setCharter);
   const [goals, setGoals] = useState(charter.goals);
   const [rules, setRules] = useState(charter.nonNegotiables);
   const [push, setPush] = useState(charter.push);
@@ -25,7 +25,7 @@ export default function CharterEdit() {
 
   return (
     <Screen>
-      <BackHeader kicker="The rules your family plays by" title="Your Charter" />
+      <BackHeader kicker="The rules your Crew plays by" title="Your Charter" />
 
       <Label>Goals (up to 3)</Label>
       <Card carve={0} padding={10}>
@@ -140,7 +140,7 @@ export default function CharterEdit() {
         title="Hold to re-sign"
         onComplete={() => {
           setCharter({ goals, nonNegotiables: rules, push, slammed, autonomy, packs });
-          toast('Charter updated. The family has it.');
+          toast('Charter updated. The Crew has it.');
           router.back();
         }}
       />

@@ -1,5 +1,5 @@
 /**
- * Your year as water rings: every week is a slice, every goal a ring. The
+ * Your year as rings: every week is a slice, every goal a ring. The
  * deeper the color, the more hours went into it.
  */
 import React, { useMemo, useState } from 'react';
@@ -7,7 +7,7 @@ import { useWindowDimensions, View } from 'react-native';
 import Svg, { Circle, G, Path, Text as SvgText } from 'react-native-svg';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { weekOfYear } from '@/lib/dates';
-import { useFamily, useHead } from '@/lib/store';
+import { useCrew, useLead } from '@/lib/store';
 import { MemberPebble } from '@/components/Pebble';
 import { BackHeader, Card, haptic, Label, Row, Screen, Txt } from '@/components/ui';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -26,9 +26,9 @@ function arc(cx: number, cy: number, r: number, a0: number, a1: number) {
 
 export default function Rings() {
   const p = useTheme();
-  const head = useHead();
-  const weeks = useFamily((s) => s.weeks);
-  const goals = useFamily((s) => s.charter.goals);
+  const lead = useLead();
+  const weeks = useCrew((s) => s.weeks);
+  const goals = useCrew((s) => s.charter.goals);
   const { width } = useWindowDimensions();
   const now = weekOfYear();
   const [picked, setPicked] = useState<number>(now);
@@ -104,7 +104,7 @@ export default function Rings() {
           })}
         </Svg>
         <View style={{ position: 'absolute', top: c - 34, left: (size - 68) / 2 + (width - 32 - size) / 2 + 0 }} pointerEvents="none">
-          <MemberPebble member={head} size={68} />
+          <MemberPebble member={lead} size={68} />
         </View>
       </Animated.View>
 

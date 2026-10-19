@@ -4,7 +4,7 @@ import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { router } from 'expo-router';
-import { useFamily, useHead } from '@/lib/store';
+import { useCrew, useLead } from '@/lib/store';
 import { fonts } from '@/theme/tokens';
 import { useTheme } from '@/theme/ThemeProvider';
 import { MemberPebble } from './Pebble';
@@ -24,7 +24,7 @@ function TabIcon({ name, active, color }: { name: string; active: boolean; color
         />
       </Svg>
     );
-  if (name === 'family')
+  if (name === 'crew')
     return (
       <Svg width={26} height={24} viewBox="0 0 26 24">
         <Path d={LOOP_ICON_PATH} fill="none" stroke={color} strokeWidth={active ? 2.8 : 1.8} strokeLinejoin="round" />
@@ -45,13 +45,13 @@ function TabIcon({ name, active, color }: { name: string; active: boolean; color
   );
 }
 
-const LABELS: Record<string, string> = { index: 'Today', family: 'Family', browser: 'Browse', me: 'Me' };
+const LABELS: Record<string, string> = { index: 'Today', crew: 'Crew', browser: 'Browse', me: 'Me' };
 
 export function TabBar({ state, navigation }: BottomTabBarProps) {
   const p = useTheme();
   const insets = useSafeAreaInsets();
-  const head = useHead();
-  const waiting = useFamily((s) => s.members.some((m) => m.state === 'waiting'));
+  const lead = useLead();
+  const waiting = useCrew((s) => s.members.some((m) => m.state === 'waiting'));
 
   const items = state.routes.map((route, index) => {
     const active = state.index === index;
@@ -73,7 +73,7 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
         <Text style={{ fontFamily: active ? fonts.bodyBold : fonts.bodySemi, fontSize: 11, color }} maxFontSizeMultiplier={1.2}>
           {LABELS[route.name] ?? route.name}
         </Text>
-        {route.name === 'family' && waiting ? (
+        {route.name === 'crew' && waiting ? (
           <View style={{ position: 'absolute', top: 6, right: 14, width: 8, height: 8, borderRadius: 4, backgroundColor: p.signal }} />
         ) : null}
       </Pressable>
@@ -85,14 +85,14 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
       key="center"
       onPress={() => {
         haptic('medium');
-        router.push({ pathname: '/chat/[id]', params: { id: head.id } });
+        router.push({ pathname: '/chat/[id]', params: { id: lead.id } });
       }}
       accessibilityRole="button"
-      accessibilityLabel={`Talk to ${head.name}`}
+      accessibilityLabel={`Talk to ${lead.name}`}
       style={{ width: 66, height: 66, marginTop: -34, alignItems: 'center', justifyContent: 'center' }}
     >
-      <View style={{ boxShadow: `0px 6px 14px ${head.color}66`, borderRadius: 33 }}>
-        <MemberPebble member={head} size={62} outline={p.text} state={head.state === 'waiting' ? 'waiting' : 'idle'} />
+      <View style={{ boxShadow: `0px 6px 14px ${lead.color}66`, borderRadius: 33 }}>
+        <MemberPebble member={lead} size={62} outline={p.text} state={lead.state === 'waiting' ? 'waiting' : 'idle'} />
       </View>
     </Pressable>
   );

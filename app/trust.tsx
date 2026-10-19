@@ -9,7 +9,8 @@ import * as Clipboard from 'expo-clipboard';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { deleteAccount, logOut } from '@/firebase/auth';
 import { getRecoveryKey } from '@/lib/vault';
-import { useFamily } from '@/lib/store';
+import { addPasskey, passkeysSupported } from '@/lib/passkeys';
+import { useCrew } from '@/lib/store';
 import { BackHeader, Btn, Card, haptic, Label, PressScale, Row, Screen, Sheet, Txt, type IconName } from '@/components/ui';
 import { HoldButton } from '@/components/HoldButton';
 import { toast } from '@/components/Toast';
@@ -24,16 +25,16 @@ const PROMISES: { icon: IconName; title: string; body: string; check: string; ro
   { icon: 'hand-left-outline', title: 'Your tap is always the final one', body: 'Sending, spending, merging and deleting always ask. Errands stop at a preview and need Face ID.', check: 'Look at any teammate: the always-ask list is locked.' },
   { icon: 'bookmark-outline', title: 'Learning is off until you turn it on', body: 'Teammates suggest what to remember. You decide.', check: 'Memory shows every fact and where it came from.', route: '/memory' },
   { icon: 'trash-outline', title: 'Forgetting really forgets', body: 'Deleting a memory or your account erases it. No soft delete.', check: 'Use Forget everything below and the vault key is destroyed with it.' },
-  { icon: 'megaphone-outline', title: 'Ads are never personalized', body: 'Free plans see one small ad. Ad networks get nothing about your family, chats or interests.', check: 'Ads are requested with non-personalized only, every time.' },
-  { icon: 'shield-checkmark-outline', title: 'Web pages can’t boss your family around', body: 'The Guard strips hidden instructions from pages before a teammate reads them.', check: 'See everything it caught.', route: '/guard' },
+  { icon: 'megaphone-outline', title: 'Ads are never personalized', body: 'Free plans see one small ad. Ad networks get nothing about your Crew, chats or interests.', check: 'Ads are requested with non-personalized only, every time.' },
+  { icon: 'shield-checkmark-outline', title: 'Web pages can’t boss your Crew around', body: 'The Guard strips hidden instructions from pages before a teammate reads them.', check: 'See everything it caught.', route: '/guard' },
 ];
 
 export default function Trust() {
   const p = useTheme();
-  const forget = useFamily((s) => s.forgetEverything);
-  const guest = useFamily((s) => s.guest);
-  const privateSession = useFamily((s) => s.settings.privateSession);
-  const setSettings = useFamily((s) => s.setSettings);
+  const forget = useCrew((s) => s.forgetEverything);
+  const guest = useCrew((s) => s.guest);
+  const privateSession = useCrew((s) => s.settings.privateSession);
+  const setSettings = useCrew((s) => s.setSettings);
   const [open, setOpen] = useState<number | null>(0);
   const [key, setKey] = useState<string | null>(null);
   const [wipe, setWipe] = useState(false);
@@ -83,10 +84,36 @@ export default function Trust() {
         <Btn title={privateSession ? 'End private session' : 'Start a private session'} small variant={privateSession ? 'signal' : 'ghost'} icon="eye-off-outline" style={{ marginTop: 12 }} onPress={() => { setSettings({ privateSession: !privateSession }); toast(privateSession ? 'Private session ended. Those messages are gone.' : 'Private session on.'); }} />
       </Card>
 
+      {passkeysSupported() && !guest ? (
+        <>
+          <Label>Passkey</Label>
+          <Card carve={0}>
+            <Txt variant="body">Sign in to the Eternity website with Face ID, Touch ID or a security key. No password to type or leak.</Txt>
+            <Btn
+              title="Add a passkey"
+              small
+              variant="ghost"
+              icon="finger-print-outline"
+              style={{ marginTop: 12 }}
+              onPress={async () => {
+                try {
+                  await addPasskey('Passkey');
+                  haptic('success');
+                  toast('Passkey added. Next time, sign in with it.');
+                } catch (e) {
+                  const m = (e as Error).message;
+                  if (m !== 'cancelled') toast(m);
+                }
+              }}
+            />
+          </Card>
+        </>
+      ) : null}
+
       <Label>Your recovery key</Label>
       <Card tone="stone" carve={2}>
         <Txt variant="small" color={p.onStoneMuted}>
-          The key that unlocks your vault. Keep it somewhere safe; anyone with it and your backup could read your family's data.
+          The key that unlocks your vault. Keep it somewhere safe; anyone with it and your backup could read your Crew's data.
         </Txt>
         {key ? (
           <Animated.View entering={FadeIn}>
@@ -112,7 +139,7 @@ export default function Trust() {
 
       <Btn title="Forget everything" variant="danger" full icon="trash-outline" style={{ marginTop: 26 }} onPress={() => setWipe(true)} />
       <Sheet visible={wipe} onClose={() => setWipe(false)} title="Forget everything?">
-        <Txt variant="body">This deletes your family, chats, memory, receipts and settings from this phone{guest ? '' : ', and deletes your account'}. It can't be undone.</Txt>
+        <Txt variant="body">This deletes your Crew, chats, memory, receipts and settings from this phone{guest ? '' : ', and deletes your account'}. It can't be undone.</Txt>
         <View style={{ marginTop: 16 }}>
           <HoldButton
             title="Hold to erase it all"

@@ -1,30 +1,30 @@
 import React, { useEffect, useState } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
 import { buyPlan, FALLBACK_PLANS, getPlans, purchasesAvailable, restorePurchases, type Plan } from '@/lib/purchases';
-import { useFamily, useHead } from '@/lib/store';
+import { useCrew, useLead } from '@/lib/store';
 import type { Tier } from '@/lib/types';
-import { Pebble } from '@/components/Pebble';
+import { MemberPebble } from '@/components/Pebble';
 import { Badge, Btn, haptic, IconBtn, PressScale, Row, Screen, Txt } from '@/components/ui';
 import { toast } from '@/components/Toast';
 import { useTheme } from '@/theme/ThemeProvider';
 import { carved } from '@/theme/tokens';
 
 const FEATURES: Record<Exclude<Tier, 'free'>, string[]> = {
-  plus: ['All 10 seats in the loop', '300 messages a day, sharper models for planning', 'Unlimited routines', '5 errands a day', 'WHOOP, Oura, YouTube, Stripe and more', 'No ads'],
+  plus: ['All 10 seats in the loop', '300 messages a day, sharper models for planning', 'Unlimited routines', '5 errands a day', 'WHOOP, YouTube, Stripe and more', 'No ads'],
   pro: ['Everything in Plus', '1,000 messages a day, the deepest model for big plans', '30 errands a day', '10 hours of Workbench computers a month', 'Watch live and take the wheel'],
-  founding: ['Everything in Plus, for $4.99 a month for life', 'Gold leaf finish for every teammate', 'Your name in the founding families list', 'Only for the first 500 families'],
+  founding: ['Everything in Plus, for $4.99 a month for life', 'Gold leaf finish for every teammate', 'Your name in the founding Crews list', 'Only for the first 500 Crews'],
 };
 
 const FREE = ['Aibram plus 2 teammates', '20 messages a day', '2 routines', 'One small ad, never personalized'];
 
 export default function PlusScreen() {
   const p = useTheme();
-  const head = useHead();
-  const tier = useFamily((s) => s.settings.tier);
-  const setSettings = useFamily((s) => s.setSettings);
+  const lead = useLead();
+  const tier = useCrew((s) => s.settings.tier);
+  const setSettings = useCrew((s) => s.setSettings);
   const [plans, setPlans] = useState<Plan[]>(FALLBACK_PLANS);
   const [pick, setPick] = useState<string>(FALLBACK_PLANS[0].id);
   const [busy, setBusy] = useState(false);
@@ -57,7 +57,7 @@ export default function PlusScreen() {
     if (r.ok && r.tier) {
       setSettings({ tier: r.tier });
       haptic('success');
-      toast(`Welcome to ${chosen.title}.`, undefined, head.color);
+      toast(`Welcome to ${chosen.title}.`, undefined, lead.color);
       router.back();
     } else if (!r.cancelled) setError(r.error ?? 'The purchase did not go through.');
   };
@@ -89,12 +89,14 @@ export default function PlusScreen() {
                 if (t && t !== 'free') {
                   setSettings({ tier: t });
                   toast('Restored.');
-                } else toast('Nothing to restore on this Apple ID.');
+                } else toast(Platform.OS === 'web' ? 'No plan on this account yet.' : 'Nothing to restore on this Apple ID.');
               }}
             />
           </Row>
           <Txt variant="tiny" center>
-            Monthly, cancel anytime in Settings. Payment is charged to your Apple ID.
+            {Platform.OS === 'web'
+              ? 'Monthly, cancel anytime. Paid securely through Stripe. Works on the website and the app.'
+              : 'Monthly, cancel anytime in Settings. Payment is charged to your Apple ID.'}
           </Txt>
         </View>
       }
@@ -104,13 +106,13 @@ export default function PlusScreen() {
       </Row>
       <View style={{ alignItems: 'center' }}>
         <Animated.View entering={ZoomIn.springify()}>
-          <Pebble shape={head.shape} color={head.color} mark={head.mark} finish={chosen.tier === 'founding' ? 'gold' : 'glow'} size={96} />
+          <MemberPebble member={lead} finish={chosen.tier === 'founding' ? 'gold' : 'glow'} size={96} />
         </Animated.View>
         <Txt variant="title" center style={{ marginTop: 14 }}>
-          A bigger family. A lighter load.
+          A bigger Crew. A lighter load.
         </Txt>
         <Txt variant="body" center style={{ marginTop: 6, maxWidth: 320 }}>
-          Fill every seat, hand off errands, and let your family take more off your plate.
+          Fill every seat, hand off errands, and let your Crew take more off your plate.
         </Txt>
       </View>
 
@@ -138,7 +140,7 @@ export default function PlusScreen() {
                       <Txt variant="h3" color={on ? (gold ? '#F6E3A1' : p.onStone) : undefined}>
                         {pl.title}
                       </Txt>
-                      {pl.tier === 'plus' && <Badge text="Most families" color={on ? p.signal : p.card2} textColor={on ? p.onSignal : p.text} />}
+                      {pl.tier === 'plus' && <Badge text="Most popular" color={on ? p.signal : p.card2} textColor={on ? p.onSignal : p.text} />}
                       {gold && <Badge text="First 500" color="#D4AF5A" textColor="#1E2023" />}
                     </Row>
                     <Txt variant="h3" color={on ? (gold ? '#F6E3A1' : p.onStone) : undefined}>

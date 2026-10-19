@@ -1,12 +1,12 @@
 /**
- * The sample family day. New users see this so the app feels alive before
+ * The sample Crew day. New users see this so the app feels alive before
  * their own calendar is connected; everything here is marked as sample and
  * can be cleared in one tap from Today or Me.
  */
 import { memberColors } from '@/theme/tokens';
 import { addDays, isoDate, uid } from './dates';
 import type {
-  Block, Confluence, Flashcard, GuardEvent, MemoryFact, Receipt, Routine, TableMessage, Trail, Watch, WeekLog,
+  Block, Meetup, Flashcard, GuardEvent, MemoryFact, Receipt, Routine, TableMessage, Trail, Watch, WeekLog,
 } from './types';
 
 export function sampleBlocks(now = new Date()): Block[] {
@@ -122,19 +122,47 @@ export function sampleTable(now = Date.now()): TableMessage[] {
 
 export function sampleFlashcards(): Flashcard[] {
   return [
-    { id: uid('fc'), deck: 'Calc: chain rule', front: 'd/dx f(g(x)) = ?', back: "f'(g(x)) · g'(x)" },
-    { id: uid('fc'), deck: 'Calc: chain rule', front: 'Derivative of (3x² + 1)⁵', back: '5(3x² + 1)⁴ · 6x' },
-    { id: uid('fc'), deck: 'Calc: chain rule', front: 'Derivative of sin(x³)', back: 'cos(x³) · 3x²' },
+    {
+      id: uid('fc'),
+      deck: 'Calc: chain rule',
+      front: 'What is $\\dfrac{d}{dx}\\,f(g(x))$?',
+      back: "$f'(g(x)) \\cdot g'(x)$",
+      hint: 'Outside function first, then multiply by the derivative of the inside.',
+      steps: ['Call the inside $u = g(x)$, so the whole thing is $f(u)$.', "Differentiate the outside: $f'(u)$.", "Multiply by the inside's derivative: $\\dfrac{du}{dx} = g'(x)$.", "Put $u$ back: $f'(g(x))\\,g'(x)$."],
+    },
+    {
+      id: uid('fc'),
+      deck: 'Calc: chain rule',
+      front: 'Differentiate $(3x^2 + 1)^5$',
+      back: '$30x\\,(3x^2 + 1)^4$',
+      hint: 'The outside is $u^5$. What is the inside?',
+      steps: ['Inside: $u = 3x^2 + 1$, so $\\dfrac{du}{dx} = 6x$.', 'Outside: $\\dfrac{d}{du}u^5 = 5u^4$.', 'Multiply: $5(3x^2+1)^4 \\cdot 6x = 30x(3x^2+1)^4$.'],
+    },
+    {
+      id: uid('fc'),
+      deck: 'Calc: chain rule',
+      front: 'Differentiate $\\sin(x^3)$',
+      back: '$3x^2\\cos(x^3)$',
+      hint: 'The derivative of $\\sin u$ is $\\cos u$.',
+      steps: ['Inside: $u = x^3$, so $\\dfrac{du}{dx} = 3x^2$.', 'Outside: $\\cos(u)$.', 'Multiply: $\\cos(x^3)\\cdot 3x^2$.'],
+    },
+    {
+      id: uid('fc'),
+      deck: 'Calc: chain rule',
+      front: 'Differentiate $e^{2x}$',
+      back: '$2e^{2x}$',
+      hint: 'The outside $e^u$ is its own derivative.',
+    },
   ];
 }
 
-export function sampleConfluence(): Confluence[] {
+export function sampleMeetups(): Meetup[] {
   return [
     {
       id: uid('cf'), name: 'CS 1411 group project', purpose: 'Find two meeting times this week and split the work',
       people: [
-        { name: 'Maya', color: memberColors.coral, head: 'Juno' },
-        { name: 'Theo', color: memberColors.clay, head: 'Atlas' },
+        { name: 'Maya', color: memberColors.coral, lead: 'Juno' },
+        { name: 'Theo', color: memberColors.clay, lead: 'Atlas' },
       ],
       status: 'negotiating',
     },

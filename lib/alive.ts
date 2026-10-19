@@ -1,11 +1,11 @@
 /**
- * Makes the sample family feel alive: teammates pick up work, finish it and
+ * Makes the sample Crew feel alive: teammates pick up work, finish it and
  * check in with you while you look around. Only runs on the sample day.
  */
 import { useEffect } from 'react';
 import { router } from 'expo-router';
 import { toast } from '@/components/Toast';
-import { useFamily } from './store';
+import { useCrew } from './store';
 
 const woken = new Set<string>();
 
@@ -18,19 +18,19 @@ const OPENING: Record<string, { state: 'idle' | 'working' | 'waiting' | 'done'; 
   quill: { state: 'idle', status: 'Ready for your next draft' },
 };
 
-export function useAliveFamily() {
-  const sample = useFamily((s) => s.sample);
-  const onboarded = useFamily((s) => s.onboarded);
-  const ids = useFamily((s) => s.members.map((m) => m.id).join(','));
+export function useAliveCrew() {
+  const sample = useCrew((s) => s.sample);
+  const onboarded = useCrew((s) => s.onboarded);
+  const ids = useCrew((s) => s.members.map((m) => m.id).join(','));
 
   useEffect(() => {
     if (!sample || !onboarded) return;
-    const st = useFamily.getState();
+    const st = useCrew.getState();
 
     st.members.forEach((m) => {
       if (woken.has(m.id)) return;
       woken.add(m.id);
-      if (m.id === st.headId) {
+      if (m.id === st.leadId) {
         st.setMemberState(m.id, 'idle', 'Watching the week');
         return;
       }
@@ -43,16 +43,16 @@ export function useAliveFamily() {
       const hasSage = st.members.some((m) => m.id === 'sage');
       // Not cleared on re-render: it checks that the sample is still on before acting.
       setTimeout(() => {
-          const s = useFamily.getState();
+          const s = useCrew.getState();
           if (!s.sample) return;
           if (hasSage && s.members.some((m) => m.id === 'sage')) {
             s.setMemberState('sage', 'done', '24 Calc cards are ready');
             toast('Sage finished your Calc deck. 24 cards.', { label: 'Study', onPress: () => router.push('/flashcards') }, '#C3A3F7');
           } else {
-            s.setMemberState(s.headId, 'working', 'Checking tomorrow');
+            s.setMemberState(s.leadId, 'working', 'Checking tomorrow');
             setTimeout(() => {
-              const now = useFamily.getState();
-              now.setMemberState(now.headId, 'idle', 'Tomorrow looks good');
+              const now = useCrew.getState();
+              now.setMemberState(now.leadId, 'idle', 'Tomorrow looks good');
             }, 6000);
           }
         }, 25_000);

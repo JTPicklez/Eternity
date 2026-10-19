@@ -13,7 +13,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import Svg, { Ellipse } from 'react-native-svg';
-import { useFamily, useHead } from '@/lib/store';
+import { useCrew, useLead } from '@/lib/store';
 import { MemberPebble } from '@/components/Pebble';
 import { Typewriter } from '@/components/Typewriter';
 import { Btn, Field, haptic, Screen, Spacer, Txt } from '@/components/ui';
@@ -39,9 +39,9 @@ function WaterLine({ width }: { width: number }) {
 
 export default function Welcome() {
   const p = useTheme();
-  const head = useHead();
-  const firstName = useFamily((s) => s.firstName);
-  const setProfile = useFamily((s) => s.setProfile);
+  const lead = useLead();
+  const firstName = useCrew((s) => s.firstName);
+  const setProfile = useCrew((s) => s.setProfile);
   const [name, setName] = useState(firstName);
   const [stage, setStage] = useState(0);
 
@@ -55,7 +55,7 @@ export default function Welcome() {
   }, [rise, opacity]);
   const riseStyle = useAnimatedStyle(() => ({ transform: [{ translateY: rise.value }], opacity: opacity.value }));
 
-  const greeting = firstName ? `Hey ${firstName}. I'm ${head.name}.` : `Hey there. I'm ${head.name}.`;
+  const greeting = firstName ? `Hey ${firstName}. I'm ${lead.name}.` : `Hey there. I'm ${lead.name}.`;
 
   return (
     <Screen>
@@ -63,14 +63,14 @@ export default function Welcome() {
       <View style={{ alignItems: 'center', marginTop: 24, height: 190, justifyContent: 'flex-end', overflow: 'visible' }}>
         <WaterLine width={300} />
         <Animated.View style={riseStyle}>
-          <MemberPebble member={head} size={150} finish="glow" />
+          <MemberPebble member={lead} size={150} finish="glow" />
         </Animated.View>
       </View>
       <Spacer h={28} />
       <Typewriter text={greeting} variant="title" onDone={() => setStage(1)} />
       {stage >= 1 && (
         <Typewriter
-          text="I'll be the head of your family: a small team of AI teammates who plan, prep and take work off your plate so you can go after the big stuff."
+          text="I'll lead your Crew: a small team of AI teammates who plan, prep and take work off your plate so you can go after the big stuff."
           variant="body"
           style={{ marginTop: 12 }}
           delay={250}

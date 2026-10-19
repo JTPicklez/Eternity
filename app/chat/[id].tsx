@@ -9,7 +9,7 @@ import { runAction } from '@/lib/actions';
 import { rewardedAvailable, showRewarded } from '@/lib/ads';
 import { PLAN_LIMITS, templateFor } from '@/lib/catalog';
 import { isoDate, shortTime } from '@/lib/dates';
-import { useFamily, useMember } from '@/lib/store';
+import { useCrew, useMember } from '@/lib/store';
 import type { ChatMessage, ProposedAction } from '@/lib/types';
 import { MemberPebble } from '@/components/Pebble';
 import { ProposalCard } from '@/components/ProposalCard';
@@ -37,17 +37,17 @@ export default function Chat() {
   const p = useTheme();
   const { id, q } = useLocalSearchParams<{ id: string; q?: string }>();
   const member = useMember(id);
-  const messages = useFamily((s) => (id ? (s.chats[id] ?? EMPTY) : EMPTY));
-  const appendChat = useFamily((s) => s.appendChat);
-  const setActionStatus = useFamily((s) => s.setActionStatus);
-  const clearChat = useFamily((s) => s.clearChat);
-  const addFact = useFamily((s) => s.addFact);
-  const settings = useFamily((s) => s.settings);
-  const usage = useFamily((s) => s.usage);
-  const setSettings = useFamily((s) => s.setSettings);
-  const setMemberState = useFamily((s) => s.setMemberState);
-  const headId = useFamily((s) => s.headId);
-  const guest = useFamily((s) => s.guest);
+  const messages = useCrew((s) => (id ? (s.chats[id] ?? EMPTY) : EMPTY));
+  const appendChat = useCrew((s) => s.appendChat);
+  const setActionStatus = useCrew((s) => s.setActionStatus);
+  const clearChat = useCrew((s) => s.clearChat);
+  const addFact = useCrew((s) => s.addFact);
+  const settings = useCrew((s) => s.settings);
+  const usage = useCrew((s) => s.usage);
+  const setSettings = useCrew((s) => s.setSettings);
+  const setMemberState = useCrew((s) => s.setMemberState);
+  const leadId = useCrew((s) => s.leadId);
+  const guest = useCrew((s) => s.guest);
 
   const [text, setText] = useState('');
   const [thinking, setThinking] = useState(false);
@@ -66,7 +66,7 @@ export default function Chat() {
       if (!value || !member || thinking) return;
       setText('');
       haptic('light');
-      const history = useFamily.getState().chats[member.id] ?? [];
+      const history = useCrew.getState().chats[member.id] ?? [];
       appendChat(member.id, { role: 'user', text: value });
       setThinking(true);
       setMemberState(member.id, 'working', 'Thinking it through');
@@ -82,12 +82,12 @@ export default function Chat() {
         preview: res.preview || undefined,
       });
       if (res.memories.length) {
-        const st = useFamily.getState();
+        const st = useCrew.getState();
         if (st.settings.learning && !st.settings.privateSession) {
           res.memories.forEach((m) => addFact(m, 'learned'));
           toast(`Saved to memory: ${res.memories[0]}`, { label: 'Undo', onPress: () => {
-            const f = useFamily.getState().facts.find((x) => x.text === res.memories[0]);
-            if (f) useFamily.getState().removeFact(f.id);
+            const f = useCrew.getState().facts.find((x) => x.text === res.memories[0]);
+            if (f) useCrew.getState().removeFact(f.id);
           } });
         } else if (!st.settings.privateSession) {
           setSuggestedMemories(res.memories);
@@ -113,7 +113,7 @@ export default function Chat() {
   if (!member) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: p.bg, alignItems: 'center', justifyContent: 'center' }}>
-        <Txt variant="h2">That teammate isn't in your family.</Txt>
+        <Txt variant="h2">That teammate isn't in your Crew.</Txt>
         <Btn title="Back" style={{ marginTop: 12 }} onPress={() => router.back()} />
       </SafeAreaView>
     );
@@ -129,7 +129,7 @@ export default function Chat() {
   };
 
   const starters = STARTERS[member.kind] ?? STARTERS.aibram;
-  const isHead = member.id === headId;
+  const isLead = member.id === leadId;
 
   const renderItem = ({ item }: { item: ChatMessage }) => {
     const mine = item.role === 'user';
@@ -195,7 +195,7 @@ export default function Chat() {
                 {member.name}
               </Txt>
               <Txt variant="tiny" numberOfLines={1} color={thinking ? p.signalText : p.muted}>
-                {thinking ? 'Thinking…' : isHead ? 'Head of the family' : member.role}
+                {thinking ? 'Thinking…' : isLead ? 'Crew lead' : member.role}
               </Txt>
             </View>
           </Row>
@@ -296,7 +296,7 @@ export default function Chat() {
                   onPress={async () => {
                     const ok = await showRewarded();
                     if (ok) {
-                      useFamily.setState((s) => ({ usage: { ...s.usage, messages: Math.max(0, s.usage.messages - 10) } }));
+                      useCrew.setState((s) => ({ usage: { ...s.usage, messages: Math.max(0, s.usage.messages - 10) } }));
                       toast('10 more messages today. Thanks for watching.');
                     }
                   }}

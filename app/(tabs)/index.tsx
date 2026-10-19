@@ -5,12 +5,12 @@ import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { askTeammate } from '@/lib/ai';
-import { useAliveFamily } from '@/lib/alive';
+import { useAliveCrew } from '@/lib/alive';
 import { AdBanner } from '@/lib/ads';
 import { clockAmPm, dayLabel, greeting, isoDate, minutesOf } from '@/lib/dates';
 import { findCollisions, huddleLine, memberLine, placedBy, weekdayName } from '@/lib/huddle';
 import { fetchEta } from '@/lib/live';
-import { useFamily, useHead } from '@/lib/store';
+import { useCrew, useLead } from '@/lib/store';
 import type { Block } from '@/lib/types';
 import { MemberPebble } from '@/components/Pebble';
 import { BlockCard } from '@/components/BlockCard';
@@ -21,20 +21,20 @@ import { fonts } from '@/theme/tokens';
 
 function AskBar() {
   const p = useTheme();
-  const head = useHead();
+  const lead = useLead();
   const [text, setText] = useState('');
   const send = () => {
     const q = text.trim();
-    if (!q) return router.push({ pathname: '/chat/[id]', params: { id: head.id } });
+    if (!q) return router.push({ pathname: '/chat/[id]', params: { id: lead.id } });
     setText('');
-    router.push({ pathname: '/chat/[id]', params: { id: head.id, q } });
+    router.push({ pathname: '/chat/[id]', params: { id: lead.id, q } });
   };
   return (
     <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: 16, paddingTop: 8, paddingBottom: 10, backgroundColor: p.bg }}>
       <TextInput
         value={text}
         onChangeText={setText}
-        placeholder="Ask or tell your family…"
+        placeholder="Ask or tell your Crew…"
         placeholderTextColor={p.muted}
         onSubmitEditing={send}
         returnKeyType="send"
@@ -53,7 +53,7 @@ function AskBar() {
           fontFamily: fonts.body,
           fontSize: 15.5,
         }}
-        accessibilityLabel="Ask or tell your family"
+        accessibilityLabel="Ask or tell your Crew"
         maxFontSizeMultiplier={1.3}
       />
       <PressScale onPress={send} accessibilityLabel="Send">
@@ -67,19 +67,19 @@ function AskBar() {
 
 export default function Today() {
   const p = useTheme();
-  useAliveFamily();
+  useAliveCrew();
   const insets = useSafeAreaInsets();
-  const head = useHead();
-  const firstName = useFamily((s) => s.firstName);
-  const members = useFamily((s) => s.members);
-  const blocks = useFamily((s) => s.blocks);
-  const sample = useFamily((s) => s.sample);
-  const tier = useFamily((s) => s.settings.tier);
-  const receipts = useFamily((s) => s.receipts);
-  const updateBlock = useFamily((s) => s.updateBlock);
-  const removeBlock = useFamily((s) => s.removeBlock);
-  const addBlock = useFamily((s) => s.addBlock);
-  const clearSample = useFamily((s) => s.clearSample);
+  const lead = useLead();
+  const firstName = useCrew((s) => s.firstName);
+  const members = useCrew((s) => s.members);
+  const blocks = useCrew((s) => s.blocks);
+  const sample = useCrew((s) => s.sample);
+  const tier = useCrew((s) => s.settings.tier);
+  const receipts = useCrew((s) => s.receipts);
+  const updateBlock = useCrew((s) => s.updateBlock);
+  const removeBlock = useCrew((s) => s.removeBlock);
+  const addBlock = useCrew((s) => s.addBlock);
+  const clearSample = useCrew((s) => s.clearSample);
   const [now, setNow] = useState(new Date());
   const [huddle, setHuddle] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -112,7 +112,7 @@ export default function Today() {
   const refresh = async () => {
     setRefreshing(true);
     const res = await askTeammate({
-      member: head,
+      member: lead,
       history: [],
       text: 'Give me my huddle for today in two short sentences: what to do next and anything that needs me. No lists.',
       task: 'huddle',
@@ -125,7 +125,7 @@ export default function Today() {
     updateBlock(b.id, { done: !b.done });
     if (!b.done) {
       haptic('success');
-      toast(`Nice. "${b.title}" is done.`, { label: 'Undo', onPress: () => useFamily.getState().updateBlock(b.id, { done: false }) });
+      toast(`Nice. "${b.title}" is done.`, { label: 'Undo', onPress: () => useCrew.getState().updateBlock(b.id, { done: false }) });
     }
   };
 
@@ -163,7 +163,7 @@ export default function Today() {
             <Row gap={10}>
               <Ionicons name="sparkles-outline" size={18} color={p.text} />
               <Txt variant="small" color={p.text2} style={{ flex: 1 }}>
-                This is a sample day so you can see your family at work.
+                This is a sample day so you can see your Crew at work.
               </Txt>
               <Btn
                 title="Clear it"
@@ -199,7 +199,7 @@ export default function Today() {
               </PressScale>
             ))}
             {members.length < 3 && (
-              <PressScale onPress={() => router.push('/riverbed')} style={{ width: '33.33%', alignItems: 'center' }} accessibilityLabel="Add a teammate">
+              <PressScale onPress={() => router.push('/studio')} style={{ width: '33.33%', alignItems: 'center' }} accessibilityLabel="Add a teammate">
                 <View
                   style={{
                     width: 56,
@@ -237,7 +237,7 @@ export default function Today() {
               {weekdayName(collision.date)} doesn't fit. Yet.
             </Txt>
             <Txt variant="body" color={p.onStoneMuted} style={{ marginTop: 8 }}>
-              {collision.a.title} and {collision.b.title} both want {clockAmPm(collision.b.time)}. {head.name} has plans that cover both.
+              {collision.a.title} and {collision.b.title} both want {clockAmPm(collision.b.time)}. {lead.name} has plans that cover both.
             </Txt>
             <Row style={{ marginTop: 14 }} gap={8}>
               <Btn title="See the plans" small variant="water" onPress={() => router.push({ pathname: '/planner', params: { fix: '1' } })} />
@@ -251,15 +251,15 @@ export default function Today() {
         <Txt variant="h2" style={{ fontSize: 24 }}>
           Today
         </Txt>
-        <Txt variant="small">{placedBy(blocks, today) ? `${placedBy(blocks, today)} placed by your family` : `${todays.length} blocks`}</Txt>
+        <Txt variant="small">{placedBy(blocks, today) ? `${placedBy(blocks, today)} placed by your Crew` : `${todays.length} blocks`}</Txt>
       </Row>
 
       <View style={{ marginTop: 12, gap: 8 }}>
         {todays.length === 0 ? (
           <Empty
             title="Nothing on today yet"
-            body={`Tell ${head.name} what you're taking on and it'll find the time.`}
-            action={<Btn title="Plan my day" small variant="signal" onPress={() => router.push({ pathname: '/chat/[id]', params: { id: head.id, q: 'Help me plan today.' } })} />}
+            body={`Tell ${lead.name} what you're taking on and it'll find the time.`}
+            action={<Btn title="Plan my day" small variant="signal" onPress={() => router.push({ pathname: '/chat/[id]', params: { id: lead.id, q: 'Help me plan today.' } })} />}
           />
         ) : (
           todays.map((b, i) => (
@@ -293,7 +293,9 @@ export default function Today() {
       <Row wrap gap={8} style={{ marginTop: 22 }}>
         <Chip label="Week planner" icon="calendar-outline" onPress={() => router.push('/planner')} />
         <Chip label="Flow" icon="water-outline" onPress={() => router.push('/flow')} />
-        <Chip label="Family Table" icon="chatbubbles-outline" onPress={() => router.push('/table')} />
+        <Chip label="Crew Table" icon="chatbubbles-outline" onPress={() => router.push('/table')} />
+        <Chip label="Messages" icon="chatbubble-ellipses-outline" onPress={() => router.push('/messages')} />
+        <Chip label="Crew Room" icon="home-outline" onPress={() => router.push('/room')} />
         <Chip label="Weekly review" icon="ribbon-outline" onPress={() => router.push('/review')} />
         <Chip label="Your year" icon="ellipse-outline" onPress={() => router.push('/rings')} />
         <Chip label="Errands" icon="bag-handle-outline" onPress={() => router.push('/errand/new')} />
@@ -304,7 +306,7 @@ export default function Today() {
           <Row gap={12}>
             <Ionicons name="receipt-outline" size={20} color={p.text} />
             <Txt variant="bodyStrong" style={{ flex: 1 }}>
-              Your family did {doneToday} {doneToday === 1 ? 'thing' : 'things'} today
+              Your Crew did {doneToday} {doneToday === 1 ? 'thing' : 'things'} today
             </Txt>
             <Txt variant="smallStrong" color={p.signalText}>
               Receipts
