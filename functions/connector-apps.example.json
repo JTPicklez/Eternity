@@ -1,11 +1,108 @@
 {
   "_readme": "Copy this to connector-apps.json (never commit that one), fill in what you have, then run: firebase functions:secrets:set CONNECTOR_APPS --data-file functions/connector-apps.json  and redeploy. Leave out anything you haven't set up; those connectors just stay off. Remove this _readme line if you like.",
-  "google": { "clientId": "", "clientSecret": "" },
-  "github": { "clientId": "", "clientSecret": "" },
-  "notion": { "clientId": "", "clientSecret": "" },
-  "slack": { "clientId": "", "clientSecret": "" },
-  "linear": { "clientId": "", "clientSecret": "" },
-  "groupme": { "clientId": "" },
-  "wolfram": { "appId": "" },
-  "webOrigins": ["https://aibram-9c44f.web.app"]
+  "google": {
+    "clientId": "",
+    "clientSecret": ""
+  },
+  "github": {
+    "clientId": "",
+    "clientSecret": ""
+  },
+  "notion": {
+    "clientId": "",
+    "clientSecret": ""
+  },
+  "slack": {
+    "clientId": "",
+    "clientSecret": ""
+  },
+  "linear": {
+    "clientId": "",
+    "clientSecret": ""
+  },
+  "groupme": {
+    "clientId": ""
+  },
+  "wolfram": {
+    "appId": ""
+  },
+  "todoist": {
+    "clientId": "",
+    "clientSecret": ""
+  },
+  "dropbox": {
+    "clientId": "",
+    "clientSecret": ""
+  },
+  "gitlab": {
+    "clientId": "",
+    "clientSecret": ""
+  },
+  "microsoft": {
+    "clientId": "",
+    "clientSecret": ""
+  },
+  "airtable": {
+    "clientId": "",
+    "clientSecret": ""
+  },
+  "atlassian": {
+    "clientId": "",
+    "clientSecret": ""
+  },
+  "asana": {
+    "clientId": "",
+    "clientSecret": ""
+  },
+  "zoom": {
+    "clientId": "",
+    "clientSecret": ""
+  },
+  "twitch": {
+    "clientId": "",
+    "clientSecret": ""
+  },
+  "vimeo": {
+    "clientId": "",
+    "clientSecret": ""
+  },
+  "eventbrite": {
+    "clientId": "",
+    "clientSecret": ""
+  },
+  "square": {
+    "clientId": "",
+    "clientSecret": ""
+  },
+  "mailchimp": {
+    "clientId": "",
+    "clientSecret": ""
+  },
+  "wordpress": {
+    "clientId": "",
+    "clientSecret": ""
+  },
+  "planningcenter": {
+    "clientId": "",
+    "clientSecret": ""
+  },
+  "hubspot": {
+    "clientId": "",
+    "clientSecret": ""
+  },
+  "clickup": {
+    "clientId": "",
+    "clientSecret": ""
+  },
+  "typeform": {
+    "clientId": "",
+    "clientSecret": ""
+  },
+  "box": {
+    "clientId": "",
+    "clientSecret": ""
+  },
+  "webOrigins": [
+    "https://aibram-9c44f.web.app"
+  ]
 }

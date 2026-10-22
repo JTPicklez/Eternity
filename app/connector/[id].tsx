@@ -106,7 +106,7 @@ export default function ConnectorDetail() {
       haptic('success');
       setPasting(null);
       setValues({});
-      toast(`${c.name} connected${account ? ` as ${account}` : ''}. The key is stored encrypted on Eternity's server, not on this phone.`);
+      toast(how.kind === 'free' ? `${c.name} is on.` : `${c.name} connected${account ? ` as ${account}` : ''}. The key is stored encrypted on Eternity's server, not on this phone.`);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -146,7 +146,7 @@ export default function ConnectorDetail() {
       } else {
         const first = actions?.find((a) => !a.write);
         if (!first) return void setTried(['Nothing to try for this one yet.']);
-        const data = await callConnector(c.id, first.name, {});
+        const data = await callConnector(c.id, first.name, (first as { demo?: Record<string, unknown> | null }).demo ?? {});
         setTried(summarize(data));
       }
     } catch (e) {
@@ -182,7 +182,7 @@ export default function ConnectorDetail() {
     if (how.kind === 'device' || how.kind === 'open') {
       return <Btn title={`Turn on ${c.name}`} variant="signal" full loading={busy} onPress={doLocal} />;
     }
-    const needsAccount = guest && (how.kind === 'oauth' || how.kind === 'key');
+    const needsAccount = guest && (how.kind === 'oauth' || how.kind === 'key' || how.kind === 'free');
     if (needsAccount) {
       return (
         <Card tone="soft" carve={1} padding={14}>
@@ -207,6 +207,9 @@ export default function ConnectorDetail() {
           ) : null}
         </View>
       );
+    }
+    if (how.kind === 'free') {
+      return <Btn title={`Turn on ${c.name}`} variant="signal" full loading={busy} onPress={doSave} />;
     }
     if (how.kind === 'key') {
       return <Btn title={`Connect ${c.name}`} variant="signal" full icon="key-outline" onPress={() => setPasting('fields')} />;
@@ -243,12 +246,18 @@ export default function ConnectorDetail() {
           <Txt variant="h2">{c.name}</Txt>
           <Row gap={6} style={{ marginTop: 4 }}>
             <Badge text={status} color={isLive ? p.success : p.card2} textColor={isLive ? '#FFFFFF' : p.text} />
+            {c.beta ? <Badge text="Beta" color={p.card2} textColor={p.muted} /> : null}
           </Row>
         </View>
       </Row>
       <Txt variant="body" style={{ marginTop: 12 }}>
         {c.unavailable ?? c.blurb}
       </Txt>
+      {c.beta ? (
+        <Txt variant="small" style={{ marginTop: 6 }}>
+          Beta: this one works, but it is new and still being tested on real accounts. If something looks off, tell us.
+        </Txt>
+      ) : null}
       {how.note && !c.unavailable ? (
         <Txt variant="small" style={{ marginTop: 6 }}>
           {how.note}

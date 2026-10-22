@@ -147,6 +147,8 @@ export interface Connector {
   blurb: string;
   connected: boolean;
   plusOnly?: boolean;
+  /** New and still being tested on real accounts. */
+  beta?: boolean;
   unavailable?: string;
   usedBy: string[];
   packs: string[];

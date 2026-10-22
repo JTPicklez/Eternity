@@ -11,7 +11,7 @@ import { toast } from '@/components/Toast';
 import { useTheme } from '@/theme/ThemeProvider';
 import { carved } from '@/theme/tokens';
 
-const CATEGORIES = ['All', 'Everyone', 'Student', 'Developer', 'Athlete', 'Creator', 'Founder', 'Writer', 'Teams', 'Campus'];
+const CATEGORIES = ['All', 'Everyone', 'Student', 'Developer', 'Athlete', 'Creator', 'Founder', 'Writer', 'Teams', 'Campus', 'Research', 'Sports', 'Civic', 'Money', 'Home'];
 
 export default function Connect() {
   const p = useTheme();
@@ -101,7 +101,7 @@ export default function Connect() {
                       <Row gap={6}>
                         <Txt variant="bodyStrong">{c.name}</Txt>
                         {c.plusOnly && <Badge text="Plus" color={p.card2} textColor={p.text} />}
-                        {isLive ? <Badge text="Live" color={p.success} textColor="#FFFFFF" /> : on ? <Badge text="Sample" color={p.card2} textColor={p.muted} /> : null}
+                        {isLive ? <Badge text="Live" color={p.success} textColor="#FFFFFF" /> : on ? <Badge text="Sample" color={p.card2} textColor={p.muted} /> : c.beta ? <Badge text="Beta" color={p.card2} textColor={p.muted} /> : null}
                       </Row>
                       <Txt variant="small" numberOfLines={2}>
                         {c.unavailable ?? c.blurb}
